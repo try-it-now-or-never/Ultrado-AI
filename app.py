@@ -20,35 +20,58 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- INICIALIZACE PAMĚTI PRO KALKULAČKU ---
+if 'num1' not in st.session_state: st.session_state.num1 = 0.0
+if 'num2' not in st.session_state: st.session_state.num2 = 0.0
+
+def reset_calc():
+    st.session_state.num1 = 0.0
+    st.session_state.num2 = 0.0
+
 # --- BOČNÍ PANEL (ROLETA) ---
 with st.sidebar:
     st.title("⚡ ULTRADO 2.0")
-    st.subheader("🛠️ EXTRA FUNKCE")
     
-    # --- KALKULAČKA ---
-    with st.expander("🔢 Kalkulačka"):
-        num1 = st.number_input("Číslo 1", value=0.0)
-        num2 = st.number_input("Číslo 2", value=0.0)
-        operace = st.selectbox("Operace", ["+", "-", "*", "/"])
-        if st.button("Vypočítej"):
-            if operace == "+": vysledek = num1 + num2
-            elif operace == "-": vysledek = num1 - num2
-            elif operace == "*": vysledek = num1 * num2
-            elif operace == "/": vysledek = num1 / num2 if num2 != 0 else "Nelze dělit nulou"
-            st.code(f"Výsledek: {vysledek}")
-
-    # --- PŘEKLADAČ ---
-    with st.expander("🌍 Překladač (CZ -> EN)"):
-        text_to_translate = st.text_area("Text k překladu:")
-        if st.button("Přeložit (Demo)"):
-            # Poznámka: Pro reálný překlad by byla potřeba knihovna googletrans, 
-            # toto je zjednodušená verze pro rychlost.
-            st.info("Tip: Pro plnohodnotný překladač propojíme Google API. Teď zkus DeepL nebo Google.")
-            st.write(f"Zatím zkopíruj sem: [Google Translate](https://translate.google.com/?sl=cs&tl=en&text={text_to_translate})")
+    # --- SOCIÁLNÍ SÍTĚ ---
+    st.subheader("🔍 HLEDAT NA SÍTÍCH")
+    search_query = st.text_input("Hledat trend pro:", placeholder="Např. parkour...")
+    if search_query:
+        st.write("Odkazy pro rychlý průzkum:")
+        st.markdown(f"👉 [YouTube](https://www.youtube.com/results?search_query={search_query})")
+        st.markdown(f"👉 [TikTok](https://www.tiktok.com/search?q={search_query})")
+        st.markdown(f"👉 [Instagram](https://www.instagram.com/explore/tags/{search_query.replace(' ', '')}/)")
 
     st.divider()
-    if st.button("🎲 Nápad na video"):
-        st.warning(random.choice(["Setup tour", "Reakce na komenty", "Challenge v YouCutu"]))
+
+    # --- HUDBA TOP 100 ---
+    with st.expander("🎵 TOP 100 HUDBA (Trendy)"):
+        st.write("Inspirace pro podmaz:")
+        top_songs = ["1. Cruel Summer - Taylor Swift", "2. Paint The Town Red - Doja Cat", "3. Greedy - Tate McRae", "4. Water - Tyla", "5. Houdini - Dua Lipa"]
+        for song in top_songs: st.write(song)
+        st.caption("[Billboard Hot 100](https://www.billboard.com/charts/hot-100/)")
+
+    # --- KALKULAČKA S REZETEM ---
+    with st.expander("🔢 Kalkulačka"):
+        n1 = st.number_input("Číslo 1", value=st.session_state.num1, key="n1")
+        n2 = st.number_input("Číslo 2", value=st.session_state.num2, key="n2")
+        operace = st.selectbox("Operace", ["+", "-", "*", "/"])
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("Vypočítej"):
+                if operace == "+": res = n1 + n2
+                elif operace == "-": res = n1 - n2
+                elif operace == "*": res = n1 * n2
+                elif operace == "/": res = n1 / n2 if n2 != 0 else "Nula!"
+                st.code(f"= {res}")
+        with c2:
+            if st.button("Smazat"):
+                reset_calc()
+                st.rerun()
+
+    st.divider()
+    if st.button("🎲 Rychlý nápad"):
+        st.warning(random.choice(["Vlog z nákupu", "Moje ranní rutina", "Tutoriál na YouCut"]))
 
 # --- HLAVNÍ PLOCHA ---
 st.title("🎬 HLAVNÍ PANEL ULTRADO")
@@ -62,8 +85,7 @@ with col1:
     if st.button("✂️ YouCut Tipy"):
         st.info("Zkus funkci 'Curve' u rychlosti pro profi zrychlení/zpomalení.")
     if st.button("📺 Návrhy názvů"):
-        if vstup:
-            st.success(random.choice([f"Šílený {vstup}!", f"Jak na {vstup}", f"TOP 5 {vstup}"]))
+        if vstup: st.success(random.choice([f"Šílený {vstup}!", f"Jak na {vstup}", f"TOP 5 {vstup}"]))
         else: st.error("Napiš téma!")
 
 with col2:
@@ -72,8 +94,7 @@ with col2:
         if vstup:
             wiki = wikipediaapi.Wikipedia(language='cs', user_agent='UltradoWeb/1.0')
             page = wiki.page(vstup)
-            if page.exists():
-                st.write(page.summary[:200] + "...")
+            if page.exists(): st.write(page.summary[:200] + "...")
             else: st.error("Nenalezeno.")
         else: st.warning("Chybí téma.")
 
@@ -83,5 +104,5 @@ if st.button("📝 GENERUJ PLÁN VIDEA"):
         st.balloons()
         st.write(f"### Plán pro: {vstup}")
         st.write("1. Úvod: 3 sekundy hook\n2. Obsah: Hlavní část\n3. Outro: Odběr")
-    else:
-        st.error("Zadej téma!")
+    else: st.error("Zadej téma!")
+
