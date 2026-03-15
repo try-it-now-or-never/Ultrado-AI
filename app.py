@@ -3,65 +3,69 @@ import wikipediaapi
 import random
 
 # --- NASTAVENÍ STRÁNKY ---
-st.set_page_config(page_title="Ultrado AI", page_icon="🎬")
+st.set_page_config(page_title="Ultrado AI Pro", page_icon="🎬", layout="wide")
 
-# Oranžovo-černý design
+# VYLEPŠENÝ DESIGN
 st.markdown("""
     <style>
-    .main { background-color: #000000; color: #ffffff; }
-    .stButton>button { background-color: #FF8C00; color: black; border-radius: 10px; font-weight: bold; }
-    h1, h2, h3 { color: #FF8C00; }
-    input { background-color: #222 !important; color: orange !important; }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    
+    .main { background-color: #0e1117; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .stButton>button { 
+        background-color: #FF8C00; 
+        color: black; 
+        border-radius: 15px; 
+        font-weight: bold; 
+        height: 3em; 
+        width: 100%;
+        transition: 0.3s;
+        border: none;
+        text-transform: uppercase;
+    }
+    .stButton>button:hover { background-color: #FFA500; transform: scale(1.02); }
+    h1 { color: #FF8C00; font-family: 'Orbitron', sans-serif; text-align: center; border-bottom: 2px solid #FF8C00; padding-bottom: 10px; }
+    .stTextInput>div>div>input { background-color: #1c1f26; color: #FF8C00; border: 1px solid #FF8C00; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🎬 ULTRADO v2.4")
+st.title("🎬 ULTRADO v2.5 PRO")
 
-if 'jmeno' not in st.session_state:
-    st.session_state.jmeno = "Tvůrce"
+vstup = st.text_input("💡 Co dnes tvoříme?", placeholder="Např. Minecraft video, Vlog z venku...")
 
-wiki = wikipediaapi.Wikipedia(language='cs', user_agent='UltradoWeb/1.0')
+st.divider()
 
-st.sidebar.header("Nastavení")
-st.session_state.jmeno = st.sidebar.text_input("Tvoje jméno:", st.session_state.jmeno)
-
-vstup = st.text_input("O čem je tvoje video / Co hledáš?")
-
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("YouCut Rady"):
-        st.info("RADA: V YouCutu zkus 'Zmrazit' (Freeze) pro vtipné momentky.")
-    if st.button("Hashtagy"):
-        t = vstup if vstup else "video"
-        st.code(f"#{t} #youcut #ultrado #fyp #edit #tvorba")
+    st.subheader("🛠️ Nástroje pro střih")
+    if st.button("✂️ YouCut Expert"):
+        st.info("TIP: Použij funkci 'Klíčové snímky' (Keyframes) pro plynulý zoom na tvůj obličej.")
+    if st.button("🏷️ Generátor Hashtagů"):
+        t = vstup if vstup else "tvorba"
+        st.code(f"#{t} #youcut #ultrado #fyp #editing #viral")
 
 with col2:
-    if st.button("Wikipedie"):
+    st.subheader("✍️ Obsah a Scénář")
+    if st.button("📖 Najít fakta (Wiki)"):
         if vstup:
+            wiki = wikipediaapi.Wikipedia(language='cs', user_agent='UltradoWeb/1.0')
             page = wiki.page(vstup)
             if page.exists():
-                st.write(f"### {page.title}")
-                st.write(page.summary[:400] + "...")
+                st.write(f"**{page.title}**: {page.summary[:300]}...")
             else: st.error("Nenalezeno.")
-        else: st.warning("Napiš téma do políčka.")
-    if st.button("Kontrola"):
-        st.write(f"### Checklist pro {st.session_state.jmeno}:")
-        st.write("- [ ] Odstraněno YouCut logo?\n- [ ] Titulky mají kontrast?\n- [ ] Zvuk je OK?")
-
-with col3:
-    if st.button("Velikost"):
-        try:
-            gb = (8 * (float(vstup) * 60)) / 8 / 1024
-            st.metric("Velikost (GB)", round(gb, 2))
-        except: st.error("Zadej minuty.")
-    if st.button("Video Úvody"):
-        hooks = [f"Vsadím se, že jsi nevěděl tohle o {vstup}!", f"Nejrychlejší způsob na {vstup}..."]
+        else: st.warning("Nejdřív něco napiš nahoru!")
+    
+    if st.button("🚀 Šílený Hook (Úvod)"):
+        hooks = [f"Tohle je důvod, proč tvůj {vstup} nikoho nezajímá...", f"3 triky pro {vstup}, které ti změní život!"]
         st.warning(random.choice(hooks) if vstup else "Napiš téma!")
 
-if st.button("Vytvořit rychlý scénář"):
+st.divider()
+if st.button("📝 VYGENEROVAT RYCHLÝ SCÉNÁŘ"):
     if vstup:
-        st.write(f"### Scénář pro: {vstup}")
-        st.write(f"**Hook:** {random.choice(['Šokující fakt', 'Otázka'])}")
-        st.write("**Střed:** Vysvětlení a akce.")
-        st.write("**Konec:** Výzva k odběru.")
+        st.success(f"Scénář pro {vstup} je připraven!")
+        st.write("1. **0:00-0:05** - Šokující vizuál a otázka.")
+        st.write("2. **0:05-0:20** - Rychlý střih (každé 2 sekundy).")
+        st.write("3. **0:20-0:30** - Call to action (Dávej odběr!).")
+    else:
+        st.error("Musíš zadat téma!")
+    
