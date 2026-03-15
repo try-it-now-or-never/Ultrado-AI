@@ -13,7 +13,7 @@ st.markdown("""
     h1, h2, h3 { color: #FF8C00; }
     input { background-color: #222 !important; color: orange !important; }
     </style>
-    """, unsafe_allow_index=True)
+    """, unsafe_allow_html=True)
 
 st.title("🎬 ULTRADO v2.4")
 
