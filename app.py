@@ -86,7 +86,7 @@ with st.sidebar:
         st.warning(random.choice(["Vlog z nákupu", "Můj setup", "YouCut tutoriál", "Reakce na trendy"]))
 
 # --- HLAVNÍ PLOCHA ---
-st.title("🎬 HLAVNÍ PANEL ULTRADO")
+st.title("🎬 HLAVNÍ PANEL ULTRADO 2.0")
 
 vstup = st.text_input("💡 Co dnes tvoříme?", placeholder="Zadej téma videa...")
 
