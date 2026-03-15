@@ -3,7 +3,7 @@ import wikipediaapi
 import random
 
 # --- NASTAVENÍ STRÁNKY ---
-st.set_page_config(page_title="Ultrado 2.0 Full", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Ultrado 2.0 ", page_icon="⚡", layout="wide")
 
 # --- DESIGN (CSS) ---
 st.markdown("""
