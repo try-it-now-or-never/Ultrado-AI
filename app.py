@@ -1,9 +1,10 @@
 import streamlit as st
 import wikipediaapi
 import random
+from deep_translator import GoogleTranslator
 
 # --- NASTAVENÍ STRÁNKY ---
-st.set_page_config(page_title="Ultrado 2.0 ", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Ultrado 2.0 Full", page_icon="⚡", layout="wide")
 
 # --- DESIGN (CSS) ---
 st.markdown("""
@@ -17,7 +18,6 @@ st.markdown("""
     .stButton>button:hover { background-color: #FFA500; transform: scale(1.02); }
     h1, h2, h3 { color: #FF8C00; font-family: 'Orbitron', sans-serif; }
     .stTextInput>div>div>input { background-color: #1c1f26; color: white; }
-    .sidebar .sidebar-content { background-color: #1c1f26; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -33,7 +33,7 @@ def reset_calc():
 with st.sidebar:
     st.title("⚡ ULTRADO 2.0")
     
-    # 1. VYHLEDÁVÁNÍ
+    # 1. VYHLEDÁVÁNÍ NA SÍTÍCH
     st.subheader("🔍 HLEDAT NA SÍTÍCH")
     search_q = st.text_input("Trend pro:", placeholder="Např. parkour...")
     if search_q:
@@ -43,20 +43,27 @@ with st.sidebar:
 
     st.divider()
 
-    # 2. HUDBA
+    # 2. HUDBA TOP 100
     with st.expander("🎵 TOP 100 HUDBA"):
-        st.write("Trendy songy:")
-        songs = ["1. Cruel Summer", "2. Paint The Town Red", "3. Greedy", "4. Water", "5. Houdini", "6. Lovin On Me"]
+        st.write("Trendy pro tvoje videa:")
+        songs = [
+            "1. Cruel Summer - Taylor Swift", "2. Paint The Town Red - Doja Cat", 
+            "3. Greedy - Tate McRae", "4. Water - Tyla", "5. Houdini - Dua Lipa",
+            "6. Lovin On Me - Jack Harlow", "7. Prada - cassö", "8. Stick Season - Noah Kahan"
+        ]
         for s in songs: st.write(s)
         st.caption("[Celý žebříček Billboard](https://www.billboard.com/charts/hot-100/)")
 
-    # 3. PŘEKLADAČ
+    # 3. PŘEKLADAČ PŘÍMO V OKNĚ
     with st.expander("🌍 PŘEKLADAČ (CZ -> EN)"):
-        txt = st.text_area("Text k překladu:")
-        if st.button("Přejít k překladu"):
-            st.write(f"👉 [Otevřít v Google Překladači](https://translate.google.com/?sl=cs&tl=en&text={txt})")
+        to_translate = st.text_area("Napiš text česky:")
+        if st.button("Přeložit"):
+            if to_translate:
+                translated = GoogleTranslator(source='cs', target='en').translate(to_translate)
+                st.success(f"Anglicky: {translated}")
+            else: st.error("Napiš něco!")
 
-    # 4. KALKULAČKA
+    # 4. KALKULAČKA S REZETEM
     with st.expander("🔢 KALKULAČKA"):
         n1 = st.number_input("Číslo 1", value=st.session_state.num1, key="n1")
         n2 = st.number_input("Číslo 2", value=st.session_state.num2, key="n2")
@@ -76,7 +83,7 @@ with st.sidebar:
 
     st.divider()
     if st.button("🎲 RYCHLÝ NÁPAD"):
-        st.warning(random.choice(["Vlog z nákupu", "Můj setup", "YouCut tutoriál"]))
+        st.warning(random.choice(["Vlog z nákupu", "Můj setup", "YouCut tutoriál", "Reakce na trendy"]))
 
 # --- HLAVNÍ PLOCHA ---
 st.title("🎬 HLAVNÍ PANEL ULTRADO")
@@ -89,10 +96,15 @@ with col1:
     st.subheader("🎥 Produkce")
     if st.button("✂️ YouCut Tipy"):
         st.info("TIP: Použij 'Curve' u rychlosti pro profi zrychlení záběru.")
+    
     if st.button("📺 Návrhy názvů"):
         if vstup:
-            st.success(random.choice([f"Šílený {vstup}!", f"Pravda o {vstup}", f"TOP 5 {vstup}"]))
+            st.success(random.choice([f"Šílený {vstup}!", f"Pravda o {vstup}", f"TOP 5 {vstup}", f"Nikdy nezkoušej {vstup}"]))
         else: st.error("Napiš téma!")
+
+    if st.button("🔥 Brutální Hook (Úvod)"):
+        hooks = [f"Vsadím se, že o {vstup} jsi tohle nevěděl!", f"Zastav! Pokud tě zajímá {vstup}, poslouchej."]
+        st.warning(random.choice(hooks) if vstup else "Chybí téma!")
 
 with col2:
     st.subheader("📚 Rešerše")
@@ -101,9 +113,13 @@ with col2:
             wiki = wikipediaapi.Wikipedia(language='cs', user_agent='UltradoWeb/1.0')
             page = wiki.page(vstup)
             if page.exists():
-                st.write(page.summary[:250] + "...")
+                st.write(page.summary[:300] + "...")
             else: st.error("Nenalezeno.")
         else: st.warning("Chybí téma.")
+        
+    if st.button("🏷️ Hashtagy"):
+        t = vstup if vstup else "video"
+        st.code(f"#{t} #youcut #ultrado #fyp #editing #viral")
 
 st.divider()
 
@@ -115,9 +131,9 @@ if st.button("📝 GENERUJ KOMPLETNÍ PLÁN"):
         t1, t2 = st.tabs(["Střih a Vizuál", "Mluvené slovo"])
         with t1:
             st.write("- **0:00-0:03** - Rychlý střih a velký titulek.")
-            st.write("- **0:03-0:15** - Dynamické záběry s hudbou z Top 100.")
-            st.write("- **Konec** - Výzva k odběru (Call to Action).")
+            st.write("- **0:03-0:15** - Dynamické záběry s hudbou.")
+            st.write("- **Konec** - Výzva k odběru.")
         with t2:
-            st.write(f"Dneska vám ukážu {vstup} tak, jak jste ho ještě neviděli!")
+            st.write(f"Ahoj! Dneska se podíváme na {vstup}. Tohle video ti změní pohled na věc!")
     else:
-        st.error("Nejdřív musíš napsat téma do políčka nahoře!")
+        st.error("Nejdřív musíš napsat téma!")
