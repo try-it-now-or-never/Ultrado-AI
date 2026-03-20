@@ -1,3 +1,4 @@
 streamlit
 wikipedia-api
 deep-translator
+streamlit-javascript
