@@ -99,7 +99,7 @@ with col_s3:
         st.session_state.last_claim_time = time.time()
         st.balloons(); st.rerun()
 
-st.info(f"Tvoji brawleři právě vyfárali: {p_money} 💰 a {p_gems} 💎")
+st.info(f"Tvoji brawleři právě vydělali: {p_money} 💰 a {p_gems} 💎")
 
 st.divider()
 
