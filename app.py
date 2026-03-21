@@ -125,25 +125,25 @@ ulice.dělič()
 with st.expander("📊 1. ODBĚRATELÉ"):
         sub = st.number_input("Aktuálně:", value=0)
         st.write(f"Do milionu zbývá: {1000000 - sub}")
-    with st.expander("🌍 2. PŘEKLADAČ"):
+with st.expander("🌍 2. PŘEKLADAČ"):
         t = st.text_area("CZ:")
         if st.button("Přeložit"): st.write(GoogleTranslator(source='cs', target='en').translate(t))
-    with st.expander("🔢 3. KALKULAČKA"):
+with st.expander("🔢 3. KALKULAČKA"):
         n1 = st.number_input("A"); n2 = st.number_input("B")
         st.write(f"Výsledek: {n1+n2}")
-    with st.expander("✅ 4. ÚKOLY"):
+with st.expander("✅ 4. ÚKOLY"):
         st.checkbox("Scénář"); st.checkbox("Nahrávání"); st.checkbox("YouCut Edit")
-    with st.expander("🎵 5. TRENDY"): st.write("• Cruel Summer\n• Greedy")
-    with st.expander("✂️ 6. YOUCUT TIPY"): st.info("Zkus 'Keyframes' pro animace!")
-    with st.expander("🎮 7. BRAWL TIPY"): st.warning("Šetři si super útok!")
-    with st.expander("⏱️ 8. SHORTS TIME"): 
+with st.expander("🎵 5. TRENDY"): st.write("• Cruel Summer\n• Greedy")
+with st.expander("✂️ 6. YOUCUT TIPY"): st.info("Zkus 'Keyframes' pro animace!")
+with st.expander("🎮 7. BRAWL TIPY"): st.warning("Šetři si super útok!")
+with st.expander("⏱️ 8. SHORTS TIME"): 
         s = st.slider("Sekundy", 0, 60, 15)
         st.write(f"Volno: {60-s}s")
-    with st.expander("🔍 9. REŠERŠE"): st.text_input("Wiki téma:")
-    with st.expander("🏷️ 10. HASHTAGY"): st.code("#youcut #brawl #ultrado")
-    with st.expander("🎒 11. INVENTÁŘ"):
+with st.expander("🔍 9. REŠERŠE"): st.text_input("Wiki téma:")
+with st.expander("🏷️ 10. HASHTAGY"): st.code("#youcut #brawl #ultrado")
+with st.expander("🎒 11. INVENTÁŘ"):
         for b in st.session_state.inventory: st.write(f"• {b}")
-    with st.expander("💾 12. RESET"):
+with st.expander("💾 12. RESET"):
         if st.button("Smazat vše"):
             if os.path.exists(SAVE_FILE): os.remove(SAVE_FILE)
             st.session_state.clear()
