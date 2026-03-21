@@ -122,7 +122,7 @@ ulice.dělič()
         
 
     # 12 Funkcí
- with st.expander("📊 1. ODBĚRATELÉ"):
+    with st.expander("📊 1. ODBĚRATELÉ"):
         sub = st.number_input("Aktuálně:", value=0)
         st.write(f"Do milionu zbývá: {1000000 - sub}")
     with st.expander("🌍 2. PŘEKLADAČ"):
