@@ -40,7 +40,7 @@ if 'money' not in st.session_state:
     st.session_state.user_name = saved.get("name", "Hráč")
     st.session_state.last_claim_time = saved.get("last", time.time())
 
-# --- DATA BRAWLERŮ ---
+# --- DATABÁZE BRAWLERŮ ---
 BRAWL_DATA = {
     "COMMON": {"list": ["YouCut Bot (C-1)", "Sběrač Pixelů", "Kluk Střihač", "Zvukový Skřet", "Boxík (Živý)"], "pay": 10},
     "RARE": {"list": ["Filtrová Víla", "Kyber-Editorka", "Brawl Expert", "Glitche-Man", "Lajkovací Golem"], "pay": 30},
@@ -50,7 +50,7 @@ BRAWL_DATA = {
 
 # --- LOGIKA FARMOVANÍ ---
 def get_rates():
-    m_h, g_h = 10, 0 # Základní bonus
+    m_h, g_h = 10, 0
     for b_entry in st.session_state.inventory:
         name_only = b_entry.split(" (")[0]
         for rar, data in BRAWL_DATA.items():
@@ -108,6 +108,7 @@ with st.sidebar:
     with st.expander("💾 12. SYSTÉM"):
         if st.button("Smazat Progress"):
             if os.path.exists(SAVE_FILE): os.remove(SAVE_FILE)
+            st.session_state.clear()
             st.rerun()
 
 # --- HLAVNÍ PLOCHA ---
@@ -128,30 +129,49 @@ st.info(f"Farma: {m_rate}💰/h | {g_rate}💎/h. Právě vyfáráno: {p_money}�
 
 st.divider()
 
-# --- BOX SIMULÁTOR ---
+# --- BOX SIMULÁTOR S UPRAVENOU ŠANCÍ ---
 st.subheader("📦 OTEVŘI BOX")
 bx1, bx2, bx3 = st.columns(3)
 
-def buy_box(cost, cur, rars):
+def buy_box(cost, cur, box_type):
     if cur == "M" and st.session_state.money >= cost: st.session_state.money -= cost
     elif cur == "G" and st.session_state.gems >= cost: st.session_state.gems -= cost
     else: st.error("Nedostatek prostředků!"); return
 
-    rar = random.choice(rars)
-    drop = random.choice(BRAWL_DATA[rar]["list"])
+    # Logika šancí
+    if box_type == "BRAWL":
+        rar = random.choices(["COMMON", "RARE"], weights=[95, 5])[0]
+    elif box_type == "BIG":
+        rar = random.choices(["RARE", "EPIC"], weights=[80, 20])[0]
+    else: # MEGA
+        rar = random.choices(["EPIC", "LEGEND"], weights=[92, 8])[0] # Jen 8% šance na Legendu!
+
+    pool = BRAWL_DATA[rar]["list"]
+    
+    # Speciální šance pro Zakladatele
+    if rar == "LEGEND":
+        # Zakladatel má váhu 1, ostatní legendy mají váhu 15 (je 15x těžší ho dostat!)
+        w = [1 if "Zakladatel" in b else 15 for b in pool]
+        drop = random.choices(pool, weights=w)[0]
+    else:
+        drop = random.choice(pool)
+
     entry = f"{drop} ({rar})"
     if entry not in st.session_state.inventory: st.session_state.inventory.append(entry)
     save_game()
-    st.success(f"NOVÝ DROP: {entry}!")
+    
+    if "Zakladatel" in entry:
+        st.balloons()
+        st.warning(f"😱 LEGENDÁRNÍ DROP: {entry}!!! (Extrémně vzácné)")
+    else:
+        st.success(f"Padl ti: {entry}")
 
 with bx1:
     st.markdown('<div class="box-card" style="border-color: #444; background: #111;"><b>BRAWL BOX</b><br>100 💰</div>', unsafe_allow_html=True)
-    if st.button("OTEVŘÍT ČERNÝ"): buy_box(100, "M", ["COMMON", "COMMON", "RARE"])
-
+    if st.button("OTEVŘÍT ČERNÝ"): buy_box(100, "M", "BRAWL")
 with bx2:
     st.markdown('<div class="box-card" style="border-color: #FF8C00; background: #221a00;"><b>BIG BOX</b><br>500 💰</div>', unsafe_allow_html=True)
-    if st.button("OTEVŘÍT ORANŽOVÝ"): buy_box(500, "M", ["RARE", "EPIC"])
-
+    if st.button("OTEVŘÍT ORANŽOVÝ"): buy_box(500, "M", "BIG")
 with bx3:
     st.markdown('<div class="box-card" style="border-color: #FFD700; background: #000; box-shadow: 0 0 10px gold;"><b>MEGA BOX</b><br>50 💎</div>', unsafe_allow_html=True)
-    if st.button("OTEVŘÍT KARBONOVÝ"): buy_box(50, "G", ["EPIC", "LEGEND"])
+    if st.button("OTEVŘÍT KARBONOVÝ"): buy_box(50, "G", "MEGA")
