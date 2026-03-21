@@ -79,22 +79,47 @@ st.markdown("""
 with st.sidebar:
     st.title("⚡ ULTRADO MENU")
     
-    # Zadávání jména a ADMIN LOGIN
-    old_n = st.session_state.user_name
-    new_n = st.text_input("Tvé Jméno:", old_n)
-    
-    if new_n == "Ultra028" and old_n != "Ultra028":
-        st.session_state.user_name = "Ultra028"
-        st.session_state.money = 10000
-        st.session_state.gems = 10000
-        save_game()
-        st.success("🔓 ADMIN ÚČET AKTIVOVÁN!")
-        st.rerun()
-    elif new_n != old_n:
-        st.session_state.user_name = new_n
-        save_game()
+    # Zadávání jmen a ADMIN LOGIN (Zabezpečený)
+starý_n = ulice.stav_relace.uživatelské_jméno
+nový_n = ulice.textový_vstup("Tvé jméno:", starý_n)
 
-    st.divider()
+# Pokud se jméno změní
+if nový_n != starý_n:
+    # 1. KONTROLA ADMINA (Ultra028)
+    if nový_n == "Ultra028":
+        # Tady si nastav svoje tajné heslo
+        heslo = ulice.textový_vstup("Zadej admin heslo:", tajný=True)
+        
+        if heslo == "attacker 123": # <--- Tady si přepiš heslo na své
+            ulice.stav_relace.uživatelské_jméno = "Ultra028"
+            ulice.stav_relace.peníze = 10000
+            ulice.stav_relace.drahokamy = 10000
+            ulice.úspěch("🔓 ADMIN ÚČET AKTIVOVÁN!")
+            uložená_hra()
+            ulice.repríza()
+        else:
+            ulice.varování("Špatné heslo! Přístup zamítnut.")
+            # Pokud zadáš špatné heslo, vrátí tě to na staré jméno nebo nulu
+            ulice.stav_relace.uživatelské_jméno = "Host" 
+            ulice.repríza()
+
+    # 2. KONTROLA BĚŽNÉHO HRÁČE
+    else:
+        ulice.stav_relace.uživatelské_jméno = nový_n
+        # DŮLEŽITÉ: Tady nastavíme startovní hodnoty pro hráče, 
+        # aby mu tam nezůstaly peníze z admina!
+        ulice.stav_relace.peníze = 100
+        ulice.stav_relace.drahokamy = 0
+        ulice.informace(f"Vítej ve hře, {nový_n}!")
+        uložená_hra()
+        ulice.repríza()
+
+ulice.dělič()
+
+# 12 Funkce (zbytek tvého kódu...)
+# ...
+    
+        
 
     # 12 Funkcí
     with st.expander("📊 1. ODBĚRATELÉ"):
