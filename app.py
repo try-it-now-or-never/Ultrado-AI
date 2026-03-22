@@ -5,7 +5,7 @@ import json
 import os
 
 # --- KONFIGURACE STRÁNKY ---
-st.set_page_config(page_title="Ultrido Tycoon FULL", page_icon="🟠", layout="wide")
+st.set_page_config(page_title="Ultrado Tycoon FULL", page_icon="🟠", layout="wide")
 
 # --- POŘADÍ RARIT PRO ŘAZENÍ ---
 RARITY_ORDER = {"Zakladatel": 0, "Legendary": 1, "Epic": 2, "Rare": 3, "Common": 4}
