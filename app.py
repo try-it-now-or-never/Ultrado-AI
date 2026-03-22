@@ -81,7 +81,7 @@ with st.sidebar:
     
     # Zadávání jmen a ADMIN LOGIN (Zabezpečený)
 starý_n = ulice.stav_relace.uživatelské_jméno
-nový_n = ulice.textový_vstup("Tvé jméno:", starý_n)
+nový_n  = ulice.textový_vstup("Tvé jméno:", starý_n)
 
 # Pokud se jméno změní
 if nový_n != starý_n:
