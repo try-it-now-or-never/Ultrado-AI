@@ -5,7 +5,10 @@ import json
 import os
 
 # --- KONFIGURACE STRÁNKY ---
-st.set_page_config(page_title="Ultrado game", page_icon="🟠", layout="wide")
+st.set_page_config(page_title="Ultrido Tycoon FULL", page_icon="🟠", layout="wide")
+
+# --- POŘADÍ RARIT PRO ŘAZENÍ ---
+RARITY_ORDER = {"Zakladatel": 0, "Legendary": 1, "Epic": 2, "Rare": 3, "Common": 4}
 
 # --- CSS PRO ANIMACE A DESIGN ---
 st.markdown("""
@@ -52,6 +55,7 @@ st.markdown("""
         border-top: 4px solid #ffcc00;
         text-align: center;
         margin-bottom: 15px;
+        height: 150px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -102,7 +106,7 @@ if 'coins' not in st.session_state:
     st.session_state.gems = 0
     st.session_state.inventory = {}
     st.session_state.last_claim = time.time()
-    st.session_state.last_drop = None  # Pro zobrazení co padlo
+    st.session_state.last_drop = None
     load_game()
 
 def get_income():
@@ -122,19 +126,16 @@ def open_box(box_type):
     else:
         weights = {"Common": 10, "Rare": 25, "Epic": 40, "Legendary": 23, "Zakladatel": 2}
 
-    # Animace třesení
     placeholder = st.empty()
     placeholder.markdown(f'<div class="box-card box-shake"><h2>📦 OTEVÍRÁM {box_type.upper()}...</h2></div>', unsafe_allow_html=True)
     time.sleep(1.8)
     placeholder.empty()
 
-    # Výpočet dropu
     rarity = random.choices(list(weights.keys()), weights=list(weights.values()))[0]
     possible = [name for name, d in BRAWLER_STATS.items() if d[0] == rarity]
     sub_weights = [BRAWLER_STATS[name][3] for name in possible]
     result = random.choices(possible, weights=sub_weights)[0]
 
-    # Uložení výsledku pro "Reveal" okno
     is_new = result not in st.session_state.inventory
     if is_new:
         st.session_state.inventory[result] = 1
@@ -145,24 +146,15 @@ def open_box(box_type):
     st.session_state.last_drop = {"name": result, "rarity": rarity, "new": is_new}
     save_game()
 
-# --- REVEAL OKNO (Zobrazí se po otevření) ---
+# --- REVEAL OKNO ---
 if st.session_state.last_drop:
     drop = st.session_state.last_drop
     color = {"Common": "#FFFFFF", "Rare": "#00FF00", "Epic": "#FF00FF", "Legendary": "#FFFF00", "Zakladatel": "#FF4500"}[drop["rarity"]]
-    
-    st.markdown(f"""
-    <div class="reveal-card">
-        <h1 style="color: {color}; text-shadow: 2px 2px 10px {color};">{"✨ NOVÁ POSTAVA! ✨" if drop["new"] else "DUPLIKÁT"}</h1>
-        <h2 style="font-size: 3em;">{drop["name"]}</h2>
-        <h3 style="color: {color};">{drop["rarity"]}</h3>
-        <p>Mince: {BRAWLER_STATS[drop["name"]][1]}/h | Gemy: {BRAWLER_STATS[drop["name"]][2]}/h</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
+    st.markdown(f'<div class="reveal-card"><h1 style="color: {color};">{"✨ NOVÁ POSTAVA! ✨" if drop["new"] else "DUPLIKÁT"}</h1><h2 style="font-size: 3em;">{drop["name"]}</h2><h3 style="color: {color};">{drop["rarity"]}</h3><p>Mince: {BRAWLER_STATS[drop["name"]][1]}/h | Gemy: {BRAWLER_STATS[drop["name"]][2]}/h</p></div>', unsafe_allow_html=True)
     if st.button("POKRAČOVAT", use_container_width=True):
         st.session_state.last_drop = None
         st.rerun()
-    st.stop() # Zastaví vykreslování zbytku stránky, dokud hráč neodklikne OK
+    st.stop()
 
 # --- HLAVNÍ UI ---
 st.title("🟠 Ultrido Tycoon: Pro Edition")
@@ -175,7 +167,7 @@ col_c.write(f"**Produkce:**\n\n{round(c_h, 1)} 🪙/h | {round(g_h, 1)} 💎/h")
 
 st.divider()
 
-# SEKCE TĚŽBY
+# TĚŽBA
 st.subheader("⛏️ Sklad")
 diff = time.time() - st.session_state.last_claim
 if diff > 43200: diff = 43200 
@@ -196,25 +188,22 @@ st.divider()
 # SHOP
 st.header("🛒 Shop s Boxy")
 s1, s2, s3 = st.columns(3)
-
 with s1:
-    st.markdown('<div class="box-card"><h3>📦 Brawl Box</h3><p>Cena: 100 🪙</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="box-card"><h3>📦 Brawl Box</h3><p>100 🪙</p></div>', unsafe_allow_html=True)
     if st.button("KOUPIT BRAWL BOX", key="b1"):
         if st.session_state.coins >= 100:
             st.session_state.coins -= 100
             open_box("Brawl Box")
             st.rerun()
-        else: st.error("Nedostatek mincí!")
-
+        else: st.error("Málo mincí!")
 with s2:
-    st.markdown('<div class="box-card" style="border-color: #ff00ff;"><h3>📦 Big Box</h3><p>Cena: 500 🪙</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="box-card" style="border-color: #ff00ff;"><h3>📦 Big Box</h3><p>500 🪙</p></div>', unsafe_allow_html=True)
     if st.button("KOUPIT BIG BOX", key="b2"):
         if st.session_state.coins >= 500:
             st.session_state.coins -= 500
             open_box("Big Box")
             st.rerun()
-        else: st.error("Nedostatek mincí!")
-
+        else: st.error("Málo mincí!")
 with s3:
     st.markdown('<div class="box-card" style="border-color: #00ccff;"><h3>💎 Mega Box</h3><p>2000 🪙 / 50 💎</p></div>', unsafe_allow_html=True)
     if st.button("KOUPIT ZA MINCE"):
@@ -230,28 +219,42 @@ with s3:
 
 st.divider()
 
-# INVENTÁŘ
+# INVENTÁŘ (SEŘAZENÝ PODLE RARITY)
 st.header("🎒 Tvůj Tým Brawlerů")
 if not st.session_state.inventory:
-    st.info("Kup si svůj první box!")
+    st.info("Kup si box!")
 else:
+    # SEŘAZENÍ: Převedeme na list a seřadíme podle RARITY_ORDER
+    sorted_inv = sorted(st.session_state.inventory.items(), key=lambda x: RARITY_ORDER[BRAWLER_STATS[x[0]][0]])
+    
     inv_cols = st.columns(5)
-    for i, (name, count) in enumerate(st.session_state.inventory.items()):
+    for i, (name, count) in enumerate(sorted_inv):
         stats = BRAWLER_STATS[name]
+        rar_color = {"Common": "#FFFFFF", "Rare": "#00FF00", "Epic": "#FF00FF", "Legendary": "#FFFF00", "Zakladatel": "#FF4500"}[stats[0]]
         with inv_cols[i % 5]:
             st.markdown(f"""
-            <div class="brawler-card">
-                <b>{name}</b><br>
-                <small style="color:#ffcc00;">{stats[0]}</small><br>
-                🪙 {stats[1]}/h | 💎 {stats[2]}/h
+            <div class="brawler-card" style="border-top-color: {rar_color};">
+                <b style="color: {rar_color};">{name}</b><br>
+                <small>{stats[0]}</small><br>
+                <div style="font-size: 0.8em; margin-top: 10px;">🪙 {stats[1]}/h | 💎 {stats[2]}/h</div>
             </div>
             """, unsafe_allow_html=True)
 
+# SIDEBAR ADMIN / RESET
 with st.sidebar:
-    secret = st.text_input("Admin Kód", type="password")
+    st.header("⚙️ Nastavení")
+    if st.button("🔄 RESET HRY (Začít od nuly)"):
+        st.session_state.coins, st.session_state.gems = 200, 0
+        st.session_state.inventory, st.session_state.last_claim = {}, time.time()
+        save_game()
+        st.rerun()
+        
+    st.divider()
+    secret = st.text_input("Vložit Admin Kód", type="password")
     if secret == "admin530":
-        if st.button("OBNOVIT VŠE"):
+        if st.button("AKTIVOVAT ADMINA"):
             st.session_state.coins, st.session_state.gems = 999999, 999
             for name in BRAWLER_STATS: st.session_state.inventory[name] = 1
             save_game()
+            st.success("Admin zapnut!")
             st.rerun()
