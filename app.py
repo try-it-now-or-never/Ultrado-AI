@@ -1,17 +1,19 @@
 import streamlit as st
 import time
 import random
+import json
+import os
 
-# --- NASTAVENÍ STRÁNKY ---
-st.set_page_config(page_title="Ultrido Tycoon", page_icon="🟠")
+# --- KONFIGURACE ---
+st.set_page_config(page_title="Ultrido Tycoon", page_icon="🟠", layout="wide")
 
-# --- DATA BRAWLERŮ ---
+# --- DATA (Rarita: Šance %, Refund při duplikátu, Výdělek/h) ---
 RARITY_SETTINGS = {
-    "Common": {"chance": 70, "refund": 10, "income": 5},
-    "Rare": {"chance": 20, "refund": 40, "income": 15},
-    "Epic": {"chance": 8, "refund": 150, "income": 50},
-    "Legendary": {"chance": 1.9, "refund": 500, "income": 200},
-    "Zakladatel": {"chance": 0.1, "refund": 2000, "income": 1000}
+    "Common": {"chance": 70, "refund": 10, "income": 20},
+    "Rare": {"chance": 20, "refund": 40, "income": 60},
+    "Epic": {"chance": 8, "refund": 150, "income": 200},
+    "Legendary": {"chance": 1.9, "refund": 500, "income": 800},
+    "Zakladatel": {"chance": 0.1, "refund": 2000, "income": 5000}
 }
 
 BRAWLERS = {
@@ -22,106 +24,134 @@ BRAWLERS = {
     "Zakladatel (TY)": "Zakladatel"
 }
 
-# --- INICIALIZACE STAVU ---
-if 'coins' not in st.session_state:
-    st.session_state.coins = 200
-    st.session_state.inventory = {} # Použijeme slovník pro počty kusů
-    st.session_state.last_claim = time.time()
+# --- SYSTÉM UKLÁDÁNÍ ---
+SAVE_FILE = "savegame.json"
 
-# --- POMOCNÉ FUNKCE ---
-def get_total_income_per_hour():
-    total_h = 0
+def save_progress():
+    data = {
+        "coins": st.session_state.coins,
+        "inventory": st.session_state.inventory,
+        "last_claim": st.session_state.last_claim
+    }
+    with open(SAVE_FILE, "w") as f:
+        json.dump(data, f)
+
+def load_progress():
+    if os.path.exists(SAVE_FILE):
+        try:
+            with open(SAVE_FILE, "r") as f:
+                data = json.load(f)
+                st.session_state.coins = data.get("coins", 200)
+                st.session_state.inventory = data.get("inventory", {})
+                st.session_state.last_claim = data.get("last_claim", time.time())
+        except:
+            st.error("Nepodařilo se načíst uloženou hru, začínáš od nuly.")
+
+# --- INICIALIZACE ---
+if 'coins' not in st.session_state:
+    load_progress()
+    if 'coins' not in st.session_state: # Pokud soubor neexistuje
+        st.session_state.coins = 200
+        st.session_state.inventory = {}
+        st.session_state.last_claim = time.time()
+
+# --- VÝPOČTY ---
+def get_income_per_hour():
+    total = 0
     for name, count in st.session_state.inventory.items():
         rarity = BRAWLERS[name]
-        total_h += RARITY_SETTINGS[rarity]["income"] * count
-    return total_h
+        total += RARITY_SETTINGS[rarity]["income"] * count
+    return total
 
-def get_current_mining():
+def get_current_mined():
     now = time.time()
-    diff_seconds = now - st.session_state.last_claim
+    diff = now - st.session_state.last_claim
+    if diff > 43200: diff = 43200 # 12h limit
     
-    # Limit 12 hodin
-    is_capped = False
-    if diff_seconds > 43200:
-        diff_seconds = 43200
-        is_capped = True
-    
-    income_per_second = get_total_income_per_hour() / 3600
-    return round(income_per_second * diff_seconds, 2), is_capped
+    income_per_sec = get_income_per_hour() / 3600
+    return round(diff * income_per_sec, 2)
 
-# --- UI / SIDEBAR ---
-st.title("🟠 Ultrido Tycoon")
-
+# --- UI: SIDEBAR ---
 with st.sidebar:
-    st.header("👤 Tvůj Profil")
-    st.metric("Mince", f"{int(st.session_state.coins)} 🪙")
-    st.write(f"Zisk: `{get_total_income_per_hour()}` mincí/h")
+    st.title("👤 Profil Hráče")
+    st.metric("Moje Mince", f"{int(st.session_state.coins)} 🪙")
+    st.write(f"Zisk: **{get_income_per_hour()}**/h")
     
     st.divider()
+    if st.button("Resetovat hru (Smazat save)"):
+        if os.path.exists(SAVE_FILE):
+            os.remove(SAVE_FILE)
+        st.rerun()
+
     secret = st.text_input("Admin Kód", type="password")
     if secret == "admin530":
         if st.button("AKTIVOVAT VŠE"):
             st.session_state.coins = 999999
             for name in BRAWLERS:
-                st.session_state.inventory[name] = st.session_state.inventory.get(name, 0) + 1
-            st.success("Admin mod aktivní!")
+                st.session_state.inventory[name] = 1
+            save_progress()
+            st.success("Admin mod aktivován!")
 
-# --- HLAVNÍ SEKCE: TĚŽBA ---
-st.subheader("⛏️ Těžební centrum")
-mined, capped = get_current_mining()
+# --- UI: HLAVNÍ STRANA ---
+st.title("🟠 Ultrido Tycoon")
 
-col1, col2 = st.columns([2, 1])
-col1.metric("Aktuálně k vyzvednutí", f"{mined} 🪙")
+# Těžba
+st.subheader("⛏️ Těžba")
+mined = get_current_mined()
+c1, c2 = st.columns([2, 1])
+c1.metric("Vytěženo od posledního vyzvednutí", f"{mined} 🪙")
 
-if capped:
-    st.warning("⚠️ Sklad je plný! (Max 12h)")
-
-if col2.button("💰 VYZVEDNOUT", use_container_width=True):
+if c2.button("💰 VYZVEDNOUT VŠE", use_container_width=True):
     if mined > 0:
         st.session_state.coins += mined
         st.session_state.last_claim = time.time()
+        save_progress()
         st.rerun()
     else:
-        st.toast("Zatím jsi nic nevykopal!")
+        st.warning("Zatím není co vyzvednout!")
 
 st.divider()
 
-# --- OBCHOD ---
+# Obchod
 st.header("📦 Shop")
-if st.button("Otevřít Brawl Box (100 🪙)", use_container_width=True):
+if st.button("Otevřít Brawl Box (Cena: 100 🪙)", use_container_width=True):
     if st.session_state.coins >= 100:
         st.session_state.coins -= 100
         
-        # Logika padání podle šancí
+        # Gacha logika
         rarities = list(RARITY_SETTINGS.keys())
         weights = [RARITY_SETTINGS[r]["chance"] for r in rarities]
-        chosen_rarity = random.choices(rarities, weights=weights)[0]
+        drawn_rarity = random.choices(rarities, weights=weights, k=1)[0]
         
-        # Výběr náhodného brawlera z dané rarity
-        possible_brawlers = [name for name, rar in BRAWLERS.items() if rar == chosen_rarity]
-        res = random.choice(possible_brawlers)
+        # Výběr postavy z dané rarity
+        available = [name for name, rar in BRAWLERS.items() if rar == drawn_rarity]
+        drawn_brawler = random.choice(available)
         
-        # Přidání do inventáře
-        if res in st.session_state.inventory:
-            refund = RARITY_SETTINGS[chosen_rarity]["refund"]
+        # Duplikát vs Nový
+        if drawn_brawler in st.session_state.inventory:
+            refund = RARITY_SETTINGS[drawn_rarity]["refund"]
             st.session_state.coins += refund
-            st.info(f"Duplikát! **{res}** se změnil na {refund} 🪙")
+            st.info(f"Máš duplikát! **{drawn_brawler}** se mění na {refund} 🪙")
         else:
-            st.session_state.inventory[res] = 1
+            st.session_state.inventory[drawn_brawler] = 1
             st.balloons()
-            st.success(f"NOVÝ BRAWLER: **{res}** ({chosen_rarity})!")
+            st.success(f"GRATULACE! Padl ti: **{drawn_brawler}** ({drawn_rarity})")
+        
+        save_progress()
     else:
         st.error("Nemáš dost mincí!")
 
-# --- INVENTÁŘ ---
+st.divider()
+
+# Inventář
 st.header("🎒 Tvůj Inventář")
 if not st.session_state.inventory:
-    st.info("Zatím nemáš žádné brawlery. Utíkej do shopu!")
+    st.info("Tvůj inventář je prázdný. Zkus štěstí v obchodě!")
 else:
-    cols = st.columns(3)
-    for idx, (name, count) in enumerate(st.session_state.inventory.items()):
-        rarity = BRAWLERS[name]
-        with cols[idx % 3]:
-            st.markdown(f"**{name}**")
-            st.caption(f"Rarita: {rarity}")
-            st.write(f"Počet: {count}x")
+    inv_cols = st.columns(4)
+    for i, (name, count) in enumerate(st.session_state.inventory.items()):
+        rar = BRAWLERS[name]
+        with inv_cols[i % 4]:
+            st.markdown(f"### {name}")
+            st.markdown(f"*{rar}*")
+            st.write(f"Výnos: {RARITY_SETTINGS[rar]['income']} 🪙/h")
