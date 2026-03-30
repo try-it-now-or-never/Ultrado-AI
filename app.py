@@ -5,47 +5,42 @@ import json
 import os
 from datetime import datetime, timedelta
 
-# --- OCHRANA IMPORTU (Aby aplikace nespadla při chybě v requirements.txt) ---
+# --- OPRAVA IMPORTŮ ---
+# Pokud knihovny nejsou nainstalovány, aplikace se aspoň spustí s varováním
 try:
     import wikipediaapi
     from deep_translator import GoogleTranslator
-    IMPORT_SUCCESS = True
+    IMPORT_ERR = False
 except ImportError:
-    IMPORT_SUCCESS = False
+    IMPORT_ERR = True
 
-# --- KONFIGURACE STRÁNKY ---
-st.set_page_config(page_title="ULTRADO 3.0", page_icon="⚡", layout="wide")
+# --- NASTAVENÍ STRÁNKY ---
+st.set_page_config(page_title="ULTRADO 3.0: FULL EDITION", page_icon="⚡", layout="wide")
 
 # --- DESIGN (CSS) ---
 st.markdown("""
-<style>
+    <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     .main { background-color: #0e1117; color: #ffffff; }
     h1, h2, h3 { color: #FF8C00; font-family: 'Orbitron', sans-serif; }
+    .stButton>button { background-color: #FF8C00; color: black; border-radius: 10px; font-weight: bold; border: none; }
     
+    /* Herní karty */
+    .brawler-card {
+        padding: 15px; border-radius: 12px; background: #1c1f26;
+        border-top: 4px solid #FF8C00; text-align: center; margin-bottom: 10px;
+    }
     @keyframes shake {
         0% { transform: translate(1px, 1px) rotate(0deg); }
         10% { transform: translate(-1px, -2px) rotate(-1deg); }
         20% { transform: translate(-3px, 0px) rotate(1deg); }
         30% { transform: translate(3px, 2px) rotate(0deg); }
-        40% { transform: translate(1px, -1px) rotate(1deg); }
-        50% { transform: translate(-1px, 2px) rotate(-1deg); }
-        60% { transform: translate(-3px, 1px) rotate(0deg); }
-        70% { transform: translate(3px, 1px) rotate(-1deg); }
-        80% { transform: translate(-1px, -1px) rotate(1deg); }
-        90% { transform: translate(1px, 2px) rotate(0deg); }
-        100% { transform: translate(1px, -2px) rotate(-1deg); }
     }
-    
-    .box-card { border: 3px solid #FF8C00; border-radius: 20px; padding: 30px; text-align: center; background-color: #1c1f26; }
-    .box-shake { animation: shake 0.5s; animation-iteration-count: infinite; border-color: #ff0000; }
-    .reveal-card { background: radial-gradient(circle, #2e2e3e 0%, #1a1a1a 100%); border: 5px solid #FF8C00; border-radius: 25px; padding: 50px; text-align: center; color: white; box-shadow: 0 0 50px rgba(255, 140, 0, 0.4); }
-    .brawler-card { padding: 15px; border-radius: 12px; background: #1c1f26; border-top: 4px solid #FF8C00; text-align: center; margin-bottom: 15px; }
-    .stButton>button { background-color: #FF8C00; color: black; border-radius: 10px; font-weight: bold; border: none; width: 100%; }
-</style>
-""", unsafe_allow_html=True)
+    .box-shake { animation: shake 0.5s infinite; border: 2px solid red; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- DATA ---
+# --- DATA A RARITY ---
 RARITY_ORDER = {"Zakladatel": 0, "Legendary": 1, "Epic": 2, "Rare": 3, "Common": 4}
 BRAWLER_STATS = {
     "YouCut Bot":      ["Common", 20, 0, 100],
@@ -62,34 +57,42 @@ BRAWLER_STATS = {
     "Zakladatel (TY)": ["Zakladatel", 5000, 7.0, 100]
 }
 
-SAVE_FILE = "save_v3_final.json"
+SAVE_FILE = "ultrido_data.json"
 
-# --- LOGIKA UKLÁDÁNÍ ---
+# --- SYSTÉM UKLÁDÁNÍ ---
 def save_game():
-    data = {"coins": st.session_state.coins, "gems": st.session_state.gems, "inventory": st.session_state.inventory, 
-            "last_claim": st.session_state.last_claim, "last_wheel": st.session_state.last_wheel, "subs": st.session_state.subs}
+    data = {
+        "coins": st.session_state.coins,
+        "gems": st.session_state.gems,
+        "inventory": st.session_state.inventory,
+        "last_claim": st.session_state.last_claim,
+        "last_wheel": st.session_state.last_wheel,
+        "subs": st.session_state.subs
+    }
     with open(SAVE_FILE, "w") as f: json.dump(data, f)
 
 def load_game():
     if os.path.exists(SAVE_FILE):
         try:
             with open(SAVE_FILE, "r") as f:
-                data = json.load(f)
-                st.session_state.coins = data.get("coins", 200)
-                st.session_state.gems = data.get("gems", 0)
-                st.session_state.inventory = data.get("inventory", {})
-                st.session_state.last_claim = data.get("last_claim", time.time())
-                st.session_state.last_wheel = data.get("last_wheel", 0)
-                st.session_state.subs = data.get("subs", 0)
+                d = json.load(f)
+                st.session_state.coins = d.get("coins", 200)
+                st.session_state.gems = d.get("gems", 0)
+                st.session_state.inventory = d.get("inventory", {})
+                st.session_state.last_claim = d.get("last_claim", time.time())
+                st.session_state.last_wheel = d.get("last_wheel", 0)
+                st.session_state.subs = d.get("subs", 0)
         except: pass
 
-# --- INICIALIZACE ---
+# --- INICIALIZACE STAVU ---
 if 'coins' not in st.session_state:
     st.session_state.coins, st.session_state.gems, st.session_state.inventory = 200, 0, {}
     st.session_state.last_claim, st.session_state.last_wheel = time.time(), 0
-    st.session_state.last_drop, st.session_state.subs = None, 0
+    st.session_state.subs = 0
+    st.session_state.last_drop = None
     load_game()
 
+# --- POMOCNÉ FUNKCE ---
 def get_income():
     c_h, g_h = 0, 0
     for name, count in st.session_state.inventory.items():
@@ -98,90 +101,173 @@ def get_income():
             g_h += BRAWLER_STATS[name][2] * count
     return c_h, g_h
 
-# --- HRA LOGIKA ---
-def open_box(box_type):
-    if box_type == "Brawl Box": w = {"Common": 85, "Rare": 14, "Epic": 1, "Legendary": 0, "Zakladatel": 0}
-    elif box_type == "Big Box": w = {"Common": 50, "Rare": 35, "Epic": 10, "Legendary": 5, "Zakladatel": 0}
+def open_box(b_type):
+    if b_type == "Brawl Box": w = {"Common": 85, "Rare": 14, "Epic": 1, "Legendary": 0}
+    elif b_type == "Big Box": w = {"Common": 50, "Rare": 35, "Epic": 10, "Legendary": 5}
     else: w = {"Common": 15, "Rare": 25, "Epic": 35, "Legendary": 23, "Zakladatel": 2}
     
     placeholder = st.empty()
-    placeholder.markdown(f'<div class="box-card box-shake"><h2>📦 OTEVÍRÁM {box_type.upper()}...</h2></div>', unsafe_allow_html=True)
+    placeholder.markdown(f'<div class="box-shake" style="padding:20px; text-align:center;"><h2>📦 OTEVÍRÁM {b_type.upper()}...</h2></div>', unsafe_allow_html=True)
     time.sleep(1.5)
     placeholder.empty()
-    
+
     rarity = random.choices(list(w.keys()), weights=list(w.values()))[0]
-    result = random.choice([n for n, d in BRAWLER_STATS.items() if d[0] == rarity])
+    res = random.choice([n for n, d in BRAWLER_STATS.items() if d[0] == rarity])
     
-    is_new = result not in st.session_state.inventory
-    if is_new: st.session_state.inventory[result] = 1
-    else: st.session_state.coins += (BRAWLER_STATS[result][1] * 5)
+    if res not in st.session_state.inventory: st.session_state.inventory[res] = 1
+    else: st.session_state.coins += (BRAWLER_STATS[res][1] * 10)
     
-    st.session_state.last_drop = {"name": result, "rarity": rarity, "new": is_new}
+    st.session_state.last_drop = {"name": res, "rarity": rarity}
     save_game()
 
-# --- REVEAL ---
-if st.session_state.last_drop:
-    drop = st.session_state.last_drop
-    st.markdown(f'<div class="reveal-card"><h1>{"✨ NOVÝ!" if drop["new"] else "DUPLIKÁT"}</h1><h2 style="font-size: 3em;">{drop["name"]}</h2><h3>{drop["rarity"]}</h3></div>', unsafe_allow_html=True)
-    if st.button("POKRAČOVAT"): st.session_state.last_drop = None; st.rerun()
-    st.stop()
+# --- BOČNÍ PANEL (PRODUKCE) ---
+with st.sidebar:
+    st.title("⚡ ULTRADO 3.0")
+    
+    # CESTA KE SLÁVĚ
+    st.subheader("📊 CESTA KE SLÁVĚ")
+    st.session_state.subs = st.number_input("Odběratelů:", value=st.session_state.subs)
+    cil = st.number_input("Cíl (subs):", value=100)
+    if cil > 0:
+        proc = min(100, int((st.session_state.subs / cil) * 100))
+        st.progress(proc / 100)
+        st.write(f"{proc}% cesty k {cil} subs!")
+        if st.session_state.subs >= cil: st.success("HOTOVO! 🏆"); st.balloons()
 
-# --- CHYBOVÁ HLÁŠKA PRO KNIHOVNY ---
-if not IMPORT_SUCCESS:
-    st.error("❌ CHYBA: Knihovny wikipedia-api nebo deep-translator nejsou nainstalovány.")
-    st.warning("Ujisti se, že máš na GitHubu soubor 'requirements.txt' se správným obsahem a restartuj Streamlit Cloud (Reboot App).")
+    st.divider()
 
-# --- UI ---
-t1, t2 = st.tabs(["🎮 TYCOON HRA", "🎬 STUDIO"])
+    # ÚKOLY
+    with st.expander("✅ MOJE ÚKOLY"):
+        st.checkbox("Vymyslet téma", key="t1")
+        st.checkbox("Natočit video", key="t2")
+        st.checkbox("Sestříhat (YouCut)", key="t3")
+        st.checkbox("Vydat na YouTube", key="t4")
 
-with t1:
+    # TRENDY
+    with st.expander("🔍 TRENDY"):
+        q = st.text_input("Hledat téma:", key="search_sidebar")
+        if q:
+            st.markdown(f"👉 [YouTube](https://www.youtube.com/results?search_query={q})")
+            st.markdown(f"👉 [TikTok](https://www.tiktok.com/search?q={q})")
+
+    # PŘEKLADAČ
+    with st.expander("🌍 PŘEKLADAČ"):
+        txt = st.text_area("Česky:", key="trans_sidebar")
+        if st.button("Přeložit") and not IMPORT_ERR:
+            st.success(GoogleTranslator(source='cs', target='en').translate(txt))
+        elif IMPORT_ERR: st.error("Knihovna nenalezena.")
+
+    # RESET
+    if st.button("🔄 ÚPLNÝ RESET HRY"):
+        st.session_state.clear()
+        st.rerun()
+
+# --- HLAVNÍ PLOCHA (TABS) ---
+tab_game, tab_studio = st.tabs(["🎮 TYCOON HRA", "🎬 PRODUKČNÍ PANEL"])
+
+with tab_game:
+    # Horní lišta
     c_h, g_h = get_income()
     col1, col2, col3 = st.columns(3)
-    col1.metric("Mince", f"{int(st.session_state.coins)} 🪙", f"{c_h}/h")
-    col2.metric("Gemy", f"{int(st.session_state.gems)} 💎", f"{g_h}/h")
-    col3.metric("Odběratelé", f"{st.session_state.subs}")
-    
+    col1.metric("Mince", f"{int(st.session_state.coins)} 🪙", f"+{c_h}/h")
+    col2.metric("Gemy", f"{int(st.session_state.gems)} 💎", f"+{g_h}/h")
+    col3.metric("Odběratelé", st.session_state.subs)
+
+    # Kolo štěstí
+    st.subheader("🎡 Kolo štěstí")
+    t_pass = time.time() - st.session_state.last_wheel
+    is_free = t_pass >= 86400
+    if is_free:
+        if st.button("🎰 ZDARMA (Daily)"):
+            st.session_state.last_wheel = time.time()
+            st.session_state.coins += random.randint(100, 500)
+            st.toast("Získáno pár mincí!"); save_game(); st.rerun()
+    else:
+        st.info(f"Další free spin za {str(timedelta(seconds=int(86400-t_pass)))}")
+
     st.divider()
-    b1, b2, b3 = st.columns(3)
-    if b1.button("BRAWL BOX (100 🪙)"):
-        if st.session_state.coins >= 100: st.session_state.coins -= 100; open_box("Brawl Box"); st.rerun()
-    if b2.button("BIG BOX (500 🪙)"):
-        if st.session_state.coins >= 500: st.session_state.coins -= 500; open_box("Big Box"); st.rerun()
-    if b3.button("MEGA BOX (50 💎)"):
-        if st.session_state.gems >= 50: st.session_state.gems -= 50; open_box("Mega Box"); st.rerun()
-        
-    st.header("🎒 Inventář")
-    if st.session_state.inventory:
-        inv = sorted(st.session_state.inventory.items(), key=lambda x: RARITY_ORDER[BRAWLER_STATS[x[0]][0]])
-        cols = st.columns(4)
-        for i, (name, count) in enumerate(inv):
-            with cols[i % 4]:
-                st.markdown(f'<div class="brawler-card"><b>{name}</b><br><small>{BRAWLER_STATS[name][0]}</small></div>', unsafe_allow_html=True)
 
-with t2:
-    st.header("🎬 Studio")
-    vstup = st.text_input("Téma videa:")
+    # Shop a Sklad
+    c_s1, c_s2 = st.columns([2, 1])
+    with c_s1:
+        st.subheader("🛒 Shop s Boxy")
+        b1, b2, b3 = st.columns(3)
+        if b1.button("Brawl Box (100 🪙)"):
+            if st.session_state.coins >= 100: st.session_state.coins -= 100; open_box("Brawl Box"); st.rerun()
+        if b2.button("Big Box (500 🪙)"):
+            if st.session_state.coins >= 500: st.session_state.coins -= 500; open_box("Big Box"); st.rerun()
+        if b3.button("Mega Box (50 💎)"):
+            if st.session_state.gems >= 50: st.session_state.gems -= 50; open_box("Mega Box"); st.rerun()
     
-    if st.button("📖 Wikipedie Hledání"):
-        if IMPORT_SUCCESS and vstup:
-            try:
-                wiki = wikipediaapi.Wikipedia(language='cs', user_agent='Ultrado/1.0')
-                page = wiki.page(vstup)
-                if page.exists(): st.write(page.summary[:400] + "...")
-                else: st.warning("Téma nebylo nalezeno.")
-            except: st.error("Chyba při spojení s Wikipedií.")
-        elif not IMPORT_SUCCESS: st.error("Funkce vypnuta - chybí knihovna.")
+    with c_s2:
+        st.subheader("⛏️ Sklad")
+        diff = min(time.time() - st.session_state.last_claim, 43200)
+        m_c, m_g = (c_h/3600)*diff, (g_h/3600)*diff
+        st.write(f"Vytěženo: {round(m_c,1)} 🪙")
+        if st.button("💰 VYZVEDNOUT"):
+            st.session_state.coins += m_c; st.session_state.gems += m_g
+            st.session_state.last_claim = time.time(); save_game(); st.rerun()
 
-    if st.button("🌍 Přeložit téma do EN"):
-        if IMPORT_SUCCESS and vstup:
-            st.success(GoogleTranslator(source='cs', target='en').translate(vstup))
+    # Inventář
+    st.subheader("🎒 Tvůj Tým (seřazeno)")
+    if st.session_state.inventory:
+        sorted_inv = sorted(st.session_state.inventory.items(), key=lambda x: RARITY_ORDER[BRAWLER_STATS[x[0]][0]])
+        i_cols = st.columns(5)
+        for i, (name, count) in enumerate(sorted_inv):
+            rar = BRAWLER_STATS[name][0]
+            clr = {"Common": "#FFF", "Rare": "#0F0", "Epic": "#F0F", "Legendary": "#FF0", "Zakladatel": "#F40"}[rar]
+            with i_cols[i % 5]:
+                st.markdown(f'<div class="brawler-card" style="border-top-color:{clr}"><b style="color:{clr}">{name}</b><br><small>{rar}</small></div>', unsafe_allow_html=True)
 
+with tab_studio:
+    st.title("🎬 HLAVNÍ PANEL ULTRADO")
+    vstup = st.text_input("💡 Co dnes tvoříme?", placeholder="Zadej téma videa...", key="main_input")
+
+    col_p, col_r = st.columns(2)
+    with col_p:
+        st.subheader("🎥 Produkce")
+        if st.button("✂️ YouCut Tipy"): st.info("Zkus 'Keyframes' pro plynulý zoom!")
+        if st.button("📺 Návrhy názvů"):
+            if vstup: st.success(random.choice([f"Šílený {vstup}!", f"Jak na {vstup}", f"Tajemství {vstup}"]))
+        if st.button("🔥 Brutální Hook"):
+            if vstup: st.warning(f"Vsadím se, že o {vstup} jsi tohle nevěděl!")
+
+    with col_r:
+        st.subheader("📚 Rešerše")
+        if st.button("📖 Wikipedie"):
+            if vstup and not IMPORT_ERR:
+                try:
+                    wiki = wikipediaapi.Wikipedia(language='cs', user_agent='Ultrado/1.0')
+                    st.write(wiki.page(vstup).summary[:300] + "...")
+                except: st.error("Nepodařilo se načíst.")
+            elif IMPORT_ERR: st.error("Chybí knihovna wikipedia-api.")
+        if st.button("🏷️ Hashtagy"):
+            st.code(f"#{vstup if vstup else 'video'} #youcut #viral")
+
+    st.divider()
+    if st.button("📝 GENERUJ KOMPLETNÍ PLÁN"):
+        if vstup:
+            st.balloons()
+            st.subheader(f"📋 Plán pro: {vstup}")
+            st.write("1. Úvod: Hook (Zaujmout hned)\n2. Střed: Gameplay/Informace\n3. Outro: Výzva k odběru!")
+
+    # Kalkulačka dole
+    with st.expander("🔢 RYCHLÁ KALKULAČKA"):
+        kn1 = st.number_input("Číslo 1", value=0.0)
+        kn2 = st.number_input("Číslo 2", value=0.0)
+        kop = st.selectbox("Operace", ["+", "-", "*", "/"])
+        if st.button("Vypočítej"):
+            if kop == "+": r = kn1+kn2
+            elif kop == "-": r = kn1-kn2
+            elif kop == "*": r = kn1*kn2
+            elif kop == "/": r = kn1/kn2 if kn2 != 0 else "Chyba"
+            st.code(f"Výsledek: {r}")
+
+# Admin Mod
 with st.sidebar:
-    st.title("⚙️ Nastavení")
-    st.session_state.subs = st.number_input("Subs:", value=st.session_state.subs)
-    if st.button("🔄 RESET"): st.session_state.clear(); st.rerun()
-    code = st.text_input("Admin", type="password")
-    if code == "admin530" and st.button("CHEAT"):
+    st.divider()
+    secret = st.text_input("Admin", type="password")
+    if secret == "admin530" and st.button("AKTIVOVAT CHEATY"):
         st.session_state.coins, st.session_state.gems = 99999, 999
         for n in BRAWLER_STATS: st.session_state.inventory[n] = 1
         save_game(); st.rerun()
