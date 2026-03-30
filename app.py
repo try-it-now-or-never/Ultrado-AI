@@ -3,7 +3,7 @@ import time
 import random
 import json
 import os
-import wikipediaapi
+import wikipedie
 from datetime import datetime, timedelta
 from deep_translator import GoogleTranslator
 
