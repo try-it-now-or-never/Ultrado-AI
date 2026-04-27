@@ -143,7 +143,19 @@ if 'seminka' not in st.session_state:
    if 'mince' not in st.session_state:
     st.session_state.mince = 49  # Tvoje startovní hodnota
 st.write(f"🎒 V inventáři máš: {st.session_state.seminka} semínek")
+# Vytvoření dvou sloupců pro přehlednost
+col1, col2 = st.columns(2)
 
+with col1:
+    # Zobrazení mincí s ikonou
+    st.metric(label="💰 Moje Mince", value=f"{st.session_state.get('mince', 0)}")
+
+with col2:
+    # Zobrazení semínek s ikonou
+    st.metric(label="🎒 Semínka", value=f"{st.session_state.get('seminka', 0)}")
+
+# Čára pro oddělení od hry
+st.divider()
 # Tlačítko pro nákup
 if st.button("🛒 Koupit semínko (10 mincí)"):
     if st.session_state.mince >= 10:
