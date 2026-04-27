@@ -17,10 +17,17 @@ except ImportError:
 # --- NASTAVENÍ STRÁNKY ---
 import streamlit.components.v1 as components
 # Tuhle část dej úplně nahoru v app.py
+# Inicializace pokročilého inventáře
 if 'mince' not in st.session_state:
     st.session_state.mince = 49
-if 'seminka' not in st.session_state:
-    st.session_state.seminka = 0
+
+if 'inventar_seedy' not in st.session_state:
+    # Budeme ukládat názvy seedů: ['Zakladni', 'Vzacny']
+    st.session_state.inventar_seedy = []
+
+if 'zasazeno' not in st.session_state:
+    # Tady budou rostliny, co už jsou v zemi
+    st.session_state.zasazeno = []
 def zobraz_3d_zahradu():
     st.markdown("### 🪴 3D Zahrada Ultrado")
     html_kod = """
