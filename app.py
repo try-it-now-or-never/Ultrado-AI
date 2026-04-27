@@ -148,7 +148,7 @@ st.write(f"🎒 V inventáři máš: {st.session_state.seminka} semínek")
 if st.button("🛒 Koupit semínko (10 mincí)"):
     if st.session_state.mince >= 10:
         st.session_state.mince -= 10
-        st.session_state.seminka += 11 # Malý bonus pro tebe
+        st.session_state.seminka += 1 # Malý bonus pro tebe
         st.success("Koupeno! Teď můžeš sázet.")
         st.rerun() # Refreshne web, aby se hned odečetly mince
     else:
