@@ -16,7 +16,11 @@ except ImportError:
 
 # --- NASTAVENÍ STRÁNKY ---
 import streamlit.components.v1 as components
-
+# Tuhle část dej úplně nahoru v app.py
+if 'mince' not in st.session_state:
+    st.session_state.mince = 49
+if 'seminka' not in st.session_state:
+    st.session_state.seminka = 0
 def zobraz_3d_zahradu():
     st.markdown("### 🪴 3D Zahrada Ultrado")
     html_kod = """
