@@ -134,6 +134,21 @@ if 'coins' not in st.session_state:
     st.session_state.last_drop = None
     load_game()
 zobraz_3d_zahradu()
+# Kontrola, jestli máme v paměti semínka, pokud ne, vytvoříme je
+if 'seminka' not in st.session_state:
+    st.session_state.seminka = 0
+
+st.write(f"🎒 V inventáři máš: {st.session_state.seminka} semínek")
+
+# Tlačítko pro nákup
+if st.button("🛒 Koupit semínko (10 mincí)"):
+    if st.session_state.mince >= 10:
+        st.session_state.mince -= 10
+        st.session_state.seminka += 11 # Malý bonus pro tebe
+        st.success("Koupeno! Teď můžeš sázet.")
+        st.rerun() # Refreshne web, aby se hned odečetly mince
+    else:
+        st.error("Máš málo mincí! Mazej tvořit videa.")
 
 # --- POMOCNÉ FUNKCE ---
 def get_income():
