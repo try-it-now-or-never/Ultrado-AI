@@ -136,8 +136,8 @@ if 'coins' not in st.session_state:
 zobraz_3d_zahradu()
 # Kontrola, jestli máme v paměti semínka, pokud ne, vytvoříme je
 if 'seminka' not in st.session_state:
-    st.session_state.seminka = 0
-
+   if 'mince' not in st.session_state:
+    st.session_state.mince = 49  # Tvoje startovní hodnota
 st.write(f"🎒 V inventáři máš: {st.session_state.seminka} semínek")
 
 # Tlačítko pro nákup
