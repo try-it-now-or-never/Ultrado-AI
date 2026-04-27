@@ -17,7 +17,6 @@ except ImportError:
 # --- NASTAVENÍ STRÁNKY ---
 import streamlit.components.v1 as components
 # Tuhle část dej úplně nahoru v app.py
-# Inicializace pokročilého inventáře
 if 'mince' not in st.session_state:
     st.session_state.mince = 49
 
