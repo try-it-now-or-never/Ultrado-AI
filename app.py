@@ -15,6 +15,48 @@ except ImportError:
     IMPORT_ERR = True
 
 # --- NASTAVENÍ STRÁNKY ---
+import streamlit.components.v1 as components
+
+def zobraz_3d_zahradu():
+    st.markdown("### 🪴 3D Zahrada Ultrado")
+    html_kod = """
+    <div id="container" style="width: 100%; height: 350px; background: #0e1117; border-radius: 20px; border: 1px solid #333;"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 350, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, 350);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5).normalize();
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        const geometry = new THREE.BoxGeometry(10, 0.2, 10);
+        const material = new THREE.MeshPhongMaterial({ color: 0x2ecc71 });
+        const ground = new THREE.Mesh(geometry, material);
+        scene.add(ground);
+
+        const shopGeom = new THREE.BoxGeometry(1, 1.5, 1);
+        const shopMat = new THREE.MeshPhongMaterial({ color: 0xffa500 });
+        const shop = new THREE.Mesh(shopGeom, shopMat);
+        shop.position.set(-2, 0.8, 0);
+        scene.add(shop);
+
+        camera.position.set(0, 5, 8);
+        camera.lookAt(0, 0, 0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            shop.rotation.y += 0.01;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+    """
+    components.html(html_kod, height=370)
 st.set_page_config(page_title="ULTRADO 3.0: FULL EDITION", page_icon="⚡", layout="wide")
 
 # --- DESIGN (CSS) ---
@@ -91,6 +133,7 @@ if 'coins' not in st.session_state:
     st.session_state.subs = 0
     st.session_state.last_drop = None
     load_game()
+zobraz_3d_zahradu()
 
 # --- POMOCNÉ FUNKCE ---
 def get_income():
