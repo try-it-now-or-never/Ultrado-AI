@@ -101,10 +101,6 @@ for i, (jmeno, data) in enumerate(nabidka.items()):
                 st.rerun()
             else:
                 st.error("Nemáš dost mincí!")
-
-# Výpis inventáře, ať vidíš, co přesně máš
-if st.session_state.inventar_seedy:
-    st.info(f"**V batohu máš:** {', '.join(st.session_state.inventar_seedy)}")
 # --- DESIGN (CSS) ---
 st.markdown("""
     <style>
