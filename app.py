@@ -69,7 +69,42 @@ def zobraz_3d_zahradu():
     """
     components.html(html_kod, height=370)
 st.set_page_config(page_title="ULTRADO 3.0: FULL EDITION", page_icon="⚡", layout="wide")
+st.divider() # Udělá dělicí čáru
+st.subheader("🛒 Obchod se semínky")
 
+# Definice nabídky
+nabidka = {
+    "Bílý Seed (Základní)": {"cena": 10},
+    "Modrý Seed (Vzácný)": {"cena": 50}
+}
+
+# Zobrazení tvých peněz a batohu hezky vedle sebe
+c1, c2 = st.columns(2)
+with c1:
+    st.metric("💰 Mince", st.session_state.mince)
+with c2:
+    # Spočítáme, kolik věcí máš v seznamu inventar_seedy
+    pocet_v_batohu = len(st.session_state.get('inventar_seedy', []))
+    st.metric("🎒 Semínka v batohu", pocet_v_batohu)
+
+# Tlačítka pro nákup (uděláme dva sloupce)
+cols = st.columns(2)
+for i, (jmeno, data) in enumerate(nabidka.items()):
+    with cols[i]:
+        st.write(f"**{jmeno}**")
+        if st.button(f"Koupit za {data['cena']}", key=f"buy_{jmeno}"):
+            if st.session_state.mince >= data['cena']:
+                st.session_state.mince -= data['cena']
+                # Přidáme jméno seedu do seznamu v batohu
+                st.session_state.inventar_seedy.append(jmeno)
+                st.success(f"Koupeno!")
+                st.rerun()
+            else:
+                st.error("Nemáš dost mincí!")
+
+# Výpis inventáře, ať vidíš, co přesně máš
+if st.session_state.inventar_seedy:
+    st.info(f"**V batohu máš:** {', '.join(st.session_state.inventar_seedy)}")
 # --- DESIGN (CSS) ---
 st.markdown("""
     <style>
