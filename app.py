@@ -195,19 +195,6 @@ with col1:
 with col2:
     # Zobrazení semínek s ikonou
     st.metric(label="🎒 Semínka", value=f"{st.session_state.get('seminka', 0)}")
-
-# Čára pro oddělení od hry
-st.divider()
-# Tlačítko pro nákup
-if st.button("🛒 Koupit semínko (10 mincí)"):
-    if st.session_state.mince >= 10:
-        st.session_state.mince -= 10
-        st.session_state.seminka += 1 # Malý bonus pro tebe
-        st.success("Koupeno! Teď můžeš sázet.")
-        st.rerun() # Refreshne web, aby se hned odečetly mince
-    else:
-        st.error("Máš málo mincí! Mazej tvořit videa.")
-
 # --- POMOCNÉ FUNKCE ---
 def get_income():
     c_h, g_h = 0, 0
