@@ -29,6 +29,49 @@ if 'zasazeno' not in st.session_state:
     # Tady budou rostliny, co už jsou v zemi
     st.session_state.zasazeno = []
     def zobraz_3d_zahradu():
+   # --- SEM TO VLOŽ (Hned pod volání funkce zahrady) ---
+st.divider()
+# 1. OBCHOD (Tady kupuješ)
+st.subheader("🛒 Obchod Ultrado")
+c1, c2 = st.columns(2)
+with c1:
+    st.metric("💰 Mince", st.session_state.mince)
+with c2:
+    st.metric("🎒 Batoh", len(st.session_state.inventar_seedy))
+
+col_a, col_b = st.columns(2)
+with col_a:
+    if st.button("Koupit Bílý Seed (10 m)"):
+        if st.session_state.mince >= 10:
+            st.session_state.mince -= 10
+            st.session_state.inventar_seedy.append("Bílý Seed")
+            st.rerun()
+with col_b:
+    if st.button("Koupit Modrý Seed (50 m)"):
+        if st.session_state.mince >= 50:
+            st.session_state.mince -= 50
+            st.session_state.inventar_seedy.append("Modrý Seed")
+            st.rerun()
+
+st.divider()
+
+# 2. SÁZENÍ (Tady to dáváš do 3D)
+st.subheader("🌱 Zasadit semínko")
+if st.session_state.inventar_seedy:
+    # Uděláme seznam unikátních věcí v batohu
+    moznosti = list(set(st.session_state.inventar_seedy))
+    vyber = st.selectbox("Vyber z batohu:", moznosti)
+    
+    if st.button(f"Zasadit {vyber}", use_container_width=True):
+        st.session_state.inventar_seedy.remove(vyber)
+        # Uložíme informaci o typu pro 3D okno
+        st.session_state.zasazeno.append({"typ": vyber})
+        st.success("Zasazeno do 3D zahrady!")
+        st.rerun()
+else:
+    st.info("Batoh je prázdný. Kup si něco v obchodě!")
+
+# --- KONEC BLOKU ---     
     st.markdown("### 🎮 Ultrado Garden 3D")
     
     # Načteme data ze systému do formátu pro JavaScript
