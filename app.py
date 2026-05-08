@@ -101,6 +101,30 @@ for i, (jmeno, data) in enumerate(nabidka.items()):
                 st.rerun()
             else:
                 st.error("Nemáš dost mincí!")
+ st.divider()
+st.subheader("🌱 Zasadit na zahradu")
+
+# Pokud máš něco v batohu, ukaž výběr
+if st.session_state.inventar_seedy:
+    # Vybereš si, co chceš zasadit
+    vyber = st.selectbox("Co zasadíme?", options=list(set(st.session_state.inventar_seedy)))
+    
+    if st.button(f"Zasadit {vyber}", use_container_width=True):
+        # 1. Odebereme to z batohu
+        st.session_state.inventar_seedy.remove(vyber)
+        # 2. Přidáme to do seznamu zasazených věcí
+        st.session_state.zasazeno.append({"typ": vyber, "cas": "teď"})
+        st.success(f"Zasazeno! {vyber} se už připravuje.")
+        st.rerun()
+else:
+    st.info("Tvůj batoh je prázdný. Kup si něco v obchodu nahoře!")
+
+# Výpis toho, co už je v zemi
+if st.session_state.zasazeno:
+    st.write("---")
+    st.write("🌍 **Na tvojí zahradě už roste:**")
+    for kytka in st.session_state.zasazeno:
+        st.write(f"🌵 {kytka['typ']}")               
 # --- DESIGN (CSS) ---
 st.markdown("""
     <style>
