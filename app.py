@@ -28,47 +28,67 @@ if 'zasazeno' not in st.session_state:
 if 'zasazeno' not in st.session_state:
     # Tady budou rostliny, co už jsou v zemi
     st.session_state.zasazeno = []
-def zobraz_3d_zahradu():
-    st.markdown("### 🪴 3D Zahrada Ultrado")
-    html_kod = """
-    <div id="container" style="width: 100%; height: 350px; background: #0e1117; border-radius: 20px; border: 1px solid #333;"></div>
+    def zobraz_3d_zahradu():
+    st.markdown("### 🎮 Ultrado Garden 3D")
+    
+    # Načteme data ze systému do formátu pro JavaScript
+    zasazene_rostliny = st.session_state.get('zasazeno', [])
+    
+    # Příprava rostlin pro JS (předáme barvu podle typu)
+    js_plants = ""
+    for i, rostlina in enumerate(zasazene_rostliny):
+        barva = "0xffffff" if "Bílý" in rostlina['typ'] else "0x0000ff"
+        # Každou kytku dáme na trochu jiné místo (náhodně dokola)
+        pos_x = (i % 3) * 2 - 2
+        pos_z = (i // 3) * 2 - 2
+        js_plants += f"""
+        const plant{i} = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 0.5, 0.5),
+            new THREE.MeshPhongMaterial({{ color: {barva} }})
+        );
+        plant{i}.position.set({pos_x}, 0.5, {pos_z});
+        scene.add(plant{i});
+        """
+
+    html_kod = f"""
+    <div id="container" style="width: 100%; height: 400px; background: #0e1117; border-radius: 20px;"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 350, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, 350);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 400, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: true }});
+        renderer.setSize(window.innerWidth, 400);
         document.getElementById('container').appendChild(renderer.domElement);
 
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5, 5, 5).normalize();
-        scene.add(light);
         scene.add(new THREE.AmbientLight(0x404040));
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 10, 5);
+        scene.add(light);
 
-        const geometry = new THREE.BoxGeometry(10, 0.2, 10);
-        const material = new THREE.MeshPhongMaterial({ color: 0x2ecc71 });
-        const ground = new THREE.Mesh(geometry, material);
+        const ground = new THREE.Mesh(
+            new THREE.CylinderGeometry(10, 10, 0.5, 32),
+            new THREE.MeshPhongMaterial({{ color: 0x2ecc71 }})
+        );
         scene.add(ground);
 
-        const shopGeom = new THREE.BoxGeometry(1, 1.5, 1);
-        const shopMat = new THREE.MeshPhongMaterial({ color: 0xffa500 });
-        const shop = new THREE.Mesh(shopGeom, shopMat);
-        shop.position.set(-2, 0.8, 0);
-        scene.add(shop);
+        // --- TADY SE VYKRESLÍ TVOJE KYTKY ---
+        {js_plants}
 
-        camera.position.set(0, 5, 8);
-        camera.lookAt(0, 0, 0);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        camera.position.set(0, 8, 12);
+        controls.update();
 
-        function animate() {
+        function animate() {{
             requestAnimationFrame(animate);
-            shop.rotation.y += 0.01;
+            controls.update();
             renderer.render(scene, camera);
-        }
+        }}
         animate();
     </script>
     """
-    components.html(html_kod, height=370)
-st.set_page_config(page_title="ULTRADO 3.0: FULL EDITION", page_icon="⚡", layout="wide")
+    import streamlit.components.v1 as components
+    components.html(html_kod, height=420)
 st.divider() # Udělá dělicí čáru
 st.subheader("🛒 Obchod se semínky")
 
