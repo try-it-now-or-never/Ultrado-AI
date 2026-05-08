@@ -101,7 +101,7 @@ for i, (jmeno, data) in enumerate(nabidka.items()):
                 st.rerun()
             else:
                 st.error("Nemáš dost mincí!")
- st.divider()
+                st.divider()
 st.subheader("🌱 Zasadit na zahradu")
 
 # Pokud máš něco v batohu, ukaž výběr
