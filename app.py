@@ -28,30 +28,29 @@ if 'zasazeno' not in st.session_state:
 if 'zasazeno' not in st.session_state:
     # Tady budou rostliny, co už jsou v zemi
     st.session_state.zasazeno = []
-    def zobraz_3d_zahradu():
-   # --- SEM TO VLOŽ (Hned pod volání funkce zahrady) ---
+   def zobraz zahradu 
 st.divider()
-# 1. OBCHOD (Tady kupuješ)
-st.subheader("🛒 Obchod Ultrado")
-c1, c2 = st.columns(2)
-with c1:
-    st.metric("💰 Mince", st.session_state.mince)
-with c2:
-    st.metric("🎒 Batoh", len(st.session_state.inventar_seedy))
+    st.subheader("🛒 Obchod Ultrado")
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.metric("💰 Mince", st.session_state.mince)
+    with c2:
+        st.metric("🎒 Batoh", len(st.session_state.inventar_seedy))
 
-col_a, col_b = st.columns(2)
-with col_a:
-    if st.button("Koupit Bílý Seed (10 m)"):
-        if st.session_state.mince >= 10:
-            st.session_state.mince -= 10
-            st.session_state.inventar_seedy.append("Bílý Seed")
-            st.rerun()
-with col_b:
-    if st.button("Koupit Modrý Seed (50 m)"):
-        if st.session_state.mince >= 50:
-            st.session_state.mince -= 50
-            st.session_state.inventar_seedy.append("Modrý Seed")
-            st.rerun()
+    col_a, col_b = st.columns(2)
+    with col_a:
+        if st.button("Koupit Bílý Seed (10 m)"):
+            if st.session_state.mince >= 10:
+                st.session_state.mince -= 10
+                st.session_state.inventar_seedy.append("Bílý Seed")
+                st.rerun()
+    with col_b:
+        if st.button("Koupit Modrý Seed (50 m)"):
+            if st.session_state.mince >= 50:
+                st.session_state.mince -= 50
+                st.session_state.inventar_seedy.append("Modrý Seed")
+                st.rerun()
 
 st.divider()
 
