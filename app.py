@@ -33,7 +33,7 @@ if 'zasazeno' not in st.session_state:
     zasazene_rostliny = st.session_state.get('zasazeno', [])
     js_plants = ""
 st.divider()
-    st.subheader("🛒 Obchod Ultrado")
+ st.subheader("🛒 Obchod Ultrado")
     
     c1, c2 = st.columns(2)
     with c1:
