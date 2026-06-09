@@ -28,7 +28,10 @@ if 'zasazeno' not in st.session_state:
 if 'zasazeno' not in st.session_state:
     # Tady budou rostliny, co už jsou v zemi
     st.session_state.zasazeno = []
-   def zobraz zahradu 
+   def zobraz_3d_zahradu():
+       st.markdown("### 🎮 3D Zahrada Ultrado")
+    zasazene_rostliny = st.session_state.get('zasazeno', [])
+    js_plants = ""
 st.divider()
     st.subheader("🛒 Obchod Ultrado")
     
