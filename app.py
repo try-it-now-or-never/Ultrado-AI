@@ -35,10 +35,10 @@ if 'zasazeno' not in st.session_state:
 st.divider()
 st.subheader("🛒 Obchod Ultrado")
     
-    c1, c2 = st.columns(2)
-    with c1:
-        st.metric("💰 Mince", st.session_state.mince)
-    with c2:
+c1, c2 = st.columns(2)
+with c1:
+    st.metric("💰 Mince", st.session_state.mince)
+with c2:
         st.metric("🎒 Batoh", len(st.session_state.inventar_seedy))
 
     col_a, col_b = st.columns(2)
