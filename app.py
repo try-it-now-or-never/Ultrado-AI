@@ -23,10 +23,26 @@ st.set_page_config(
     layout="wide"
 )
 
-SAVE_FILE = "ultrido_data.json"
+# ---------------- LOKÁLNÍ UKLÁDÁNÍ (LOCALSTORAGE) ----------------
 
-# ---------------- SESSION STATE ----------------
+# Načtení uložení z URL/prohlížeče při spuštění
+query_params = st.query_params
 
+if "loaded_from_client" not in st.session_state:
+    if "save_data" in query_params:
+        try:
+            data = json.loads(query_params["save_data"])
+            st.session_state.coins = data.get("coins", 200)
+            st.session_state.gems = data.get("gems", 0)
+            st.session_state.inventory = data.get("inventory", {})
+            st.session_state.last_claim = data.get("last_claim", time.time())
+            st.session_state.last_wheel = data.get("last_wheel", 0)
+            st.session_state.subs = data.get("subs", 0)
+        except Exception:
+            pass
+    st.session_state.loaded_from_client = True
+
+# Standardní nastavení proměnných
 if "coins" not in st.session_state:
     st.session_state.coins = 200
 
@@ -47,6 +63,41 @@ if "subs" not in st.session_state:
 
 if "last_drop" not in st.session_state:
     st.session_state.last_drop = None
+
+
+def save_game():
+    """Uloží data přímo do prohlížeče daného uživatele (localStorage)."""
+    data = {
+        "coins": st.session_state.coins,
+        "gems": st.session_state.gems,
+        "inventory": st.session_state.inventory,
+        "last_claim": st.session_state.last_claim,
+        "last_wheel": st.session_state.last_wheel,
+        "subs": st.session_state.subs,
+    }
+    json_str = json.dumps(data)
+    
+    # JavaScript pro uložení do localStorage daného zařízení
+    js_code = f"""
+    <script>
+        localStorage.setItem('ultrado_user_save', '{json_str}');
+    </script>
+    """
+    components.html(js_code, height=0, width=0)
+
+# Synchronizace uložení do localStorage při zapnutí stránky
+js_load_code = """
+<script>
+    const savedData = localStorage.getItem('ultrado_user_save');
+    const urlParams = new URLSearchParams(window.location.search);
+    if (savedData && !urlParams.has('save_data')) {
+        urlParams.set('save_data', savedData);
+        window.location.search = urlParams.toString();
+    }
+</script>
+"""
+components.html(js_load_code, height=0, width=0)
+
 
 # ---------------- DATA ----------------
 
@@ -72,43 +123,6 @@ BRAWLER_STATS = {
     "Brawl Král": ["Legendary", 1200, 5.0, 50],
     "Zakladatel (TY)": ["Zakladatel", 5000, 7.0, 100]
 }
-# ---------------- UKLÁDÁNÍ ----------------
-
-def save_game():
-    data = {
-        "coins": st.session_state.coins,
-        "gems": st.session_state.gems,
-        "inventory": st.session_state.inventory,
-        "last_claim": st.session_state.last_claim,
-        "last_wheel": st.session_state.last_wheel,
-        "subs": st.session_state.subs,
-    }
-
-    with open(SAVE_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f)
-
-
-def load_game():
-    if not os.path.exists(SAVE_FILE):
-        return
-
-    try:
-        with open(SAVE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        st.session_state.coins = data.get("coins", 200)
-        st.session_state.gems = data.get("gems", 0)
-        st.session_state.inventory = data.get("inventory", {})
-        st.session_state.last_claim = data.get("last_claim", time.time())
-        st.session_state.last_wheel = data.get("last_wheel", 0)
-        st.session_state.subs = data.get("subs", 0)
-
-    except Exception:
-        pass
-
-
-load_game()
-
 
 # ---------------- POMOCNÉ FUNKCE ----------------
 
@@ -177,6 +191,7 @@ def open_box(box_type):
     }
 
     save_game()
+
 # ---------------- CSS ----------------
 
 st.markdown("""
@@ -274,6 +289,13 @@ with st.sidebar:
 
     if st.button("🔄 Reset hry"):
         st.session_state.clear()
+        js_reset = """
+        <script>
+            localStorage.removeItem('ultrado_user_save');
+            window.location.href = window.location.pathname;
+        </script>
+        """
+        components.html(js_reset, height=0, width=0)
         st.rerun()
 
 
@@ -318,7 +340,7 @@ with tab_game:
 
         if st.button("Vytočit zdarma"):
 
-            reward = random.randint(100,500)
+            reward = random.randint(100, 500)
 
             st.session_state.coins += reward
 
@@ -447,6 +469,7 @@ with tab_game:
     else:
 
         st.info("Zatím nemáš žádné postavy.")
+
 with tab_studio:
 
     st.title("🎬 HLAVNÍ PANEL ULTRADO")
@@ -647,14 +670,17 @@ with st.sidebar:
 
         if st.button("♻️ Vymazat uloženou hru"):
 
-            if os.path.exists(SAVE_FILE):
-                os.remove(SAVE_FILE)
-
             st.session_state.clear()
+            js_reset = """
+            <script>
+                localStorage.removeItem('ultrado_user_save');
+                window.location.href = window.location.pathname;
+            </script>
+            """
+            components.html(js_reset, height=0, width=0)
 
             st.rerun()
 
-
-# ---------------- POSLEDNÍ ULOŽENÍ ----------------
-
+# Uložení při každé změně stavu
 save_game()
+    
