@@ -222,6 +222,18 @@ h1,h2,h3{
     border-top:4px solid #ff8c00;
 }
 
+.wiki-box {
+    max-height: 250px;
+    overflow-y: auto;
+    background: #1c1f26;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ff8c00;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    color: #e0e0e0;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -544,7 +556,11 @@ with tab_studio:
                     page = wiki.page(tema)
 
                     if page.exists():
-                        st.write(page.summary[:500] + "...")
+                        wiki_text = page.summary[:1200]
+                        st.markdown(
+                            f'<div class="wiki-box">{wiki_text}...</div>',
+                            unsafe_allow_html=True
+                        )
                     else:
                         st.warning("Stránka nebyla nalezena.")
 
@@ -683,4 +699,3 @@ with st.sidebar:
 
 # Uložení při každé změně stavu
 save_game()
-    
