@@ -104,24 +104,66 @@ components.html(js_load_code, height=0, width=0)
 RARITY_ORDER = {
     "Zakladatel": 0,
     "Legendary": 1,
-    "Epic": 2,
-    "Rare": 3,
-    "Common": 4
+    "Mythic": 2,
+    "Epic": 3,
+    "Rare": 4,
+    "Common": 5
 }
 
+# Struktura: [Rarita, Mince/h, Gemy/h]
 BRAWLER_STATS = {
-    "YouCut Bot": ["Common", 20, 0, 100],
-    "Sběrač Pixelů": ["Common", 25, 0, 80],
-    "Kluk Střihač": ["Common", 30, 0, 60],
-    "Boxík": ["Common", 15, 0, 120],
-    "Filtrová Víla": ["Rare", 60, 0, 100],
-    "Brawl Expert": ["Rare", 80, 0, 70],
-    "Ultrido Velitel": ["Epic", 150, 0.5, 100],
-    "Zlatý Střihač": ["Epic", 200, 0.8, 65],
-    "Data-Drak": ["Epic", 250, 1.0, 40],
-    "Drahokamový Titán": ["Legendary", 800, 3.5, 100],
-    "Brawl Král": ["Legendary", 1200, 5.0, 50],
-    "Zakladatel (TY)": ["Zakladatel", 5000, 7.0, 100]
+    # ⚪ Common (5 - 25 🪙/h)
+    "YouCut Bot": ["Common", 5, 0],
+    "Ultrado Pixel": ["Common", 7, 0],
+    "Kluk Střihač": ["Common", 10, 0],
+    "Kódový Prach": ["Common", 12, 0],
+    "Mikrofonní Šum": ["Common", 15, 0],
+    "Hledač Coinů": ["Common", 18, 0],
+    "Sběrač Pixelů": ["Common", 20, 0],
+    "Ultra Bot": ["Common", 22, 0],
+    "Shorts Klikač": ["Common", 25, 0],
+
+    # 🟢 Rare (35 - 90 🪙/h)
+    "Filtrová Víla": ["Rare", 35, 0],
+    "Digitální Duch": ["Rare", 42, 0],
+    "Brawl Expert": ["Rare", 50, 0],
+    "Ztracený Pixel": ["Rare", 58, 0],
+    "Ultrado Editor": ["Rare", 65, 0],
+    "Editor": ["Rare", 70, 0],
+    "Zvukový Mistr": ["Rare", 78, 0],
+    "Ultra Střihač": ["Rare", 85, 0],
+    "Kamera Machr": ["Rare", 90, 0],
+
+    # 🟣 Epic (105 - 215 🪙/h)
+    "Ultrido Velitel": ["Epic", 105, 0],
+    "Sběrač Coinů": ["Epic", 120, 0],
+    "Zlatý Střihač": ["Epic", 135, 0],
+    "Tajemný Sidebar": ["Epic", 150, 0],
+    "Renderovací Král": ["Epic", 170, 0],
+    "Matematický Král": ["Epic", 185, 0],
+    "Ultrado Zaměstnanec": ["Epic", 200, 0],
+    "Algoritmus Master": ["Epic", 215, 0],
+
+    # 🔴 Mythic (250 - 700 🪙/h + 0.3 - 1.0 💎/h)
+    "Data-Drak": ["Mythic", 250, 0.3],
+    "Ultrado Manažer": ["Mythic", 300, 0.4],
+    "Kódový Architekt": ["Mythic", 380, 0.5],
+    "Kódový Génius": ["Mythic", 450, 0.6],
+    "Analytický Magnát": ["Mythic", 520, 0.7],
+    "Brawl Taktik": ["Mythic", 580, 0.8],
+    "Studio Inženýr": ["Mythic", 640, 0.9],
+    "Stream Star": ["Mythic", 700, 1.0],
+
+    # 🟡 Legendary (900 - 1800 🪙/h + 2.0 - 5.0 💎/h)
+    "Drahokamový Titán": ["Legendary", 900, 2.0],
+    "Zlatý Klikač": ["Legendary", 1100, 2.5],
+    "Brawl Král": ["Legendary", 1300, 3.2],
+    "Ultrado Titan": ["Legendary", 1500, 3.8],
+    "Ultrado MISTR": ["Legendary", 1650, 4.4],
+    "Ultrado Vizionář": ["Legendary", 1800, 5.0],
+
+    # 👑 Zakladatel (Unikátní)
+    "Zakladatel Ultrado": ["Zakladatel", 3500, 12.0]
 }
 
 # ---------------- POMOCNÉ FUNKCE ----------------
@@ -130,38 +172,50 @@ def get_income():
     coins_h = 0
     gems_h = 0
 
-    for name, count in st.session_state.inventory.items():
+    for name, item_data in st.session_state.inventory.items():
         if name in BRAWLER_STATS:
-            coins_h += BRAWLER_STATS[name][1] * count
-            gems_h += BRAWLER_STATS[name][2] * count
+            # Zpětná kompatibilita pro staré uložení (pokud uložení obsahovalo pouze číslo)
+            if isinstance(item_data, dict):
+                level = item_data.get("level", 1)
+            else:
+                level = item_data
 
-    return coins_h, gems_h
+            # Každý level nad Level 1 přidává +20% k příjmu
+            multiplier = 1 + (level - 1) * 0.20
+            
+            coins_h += BRAWLER_STATS[name][1] * multiplier
+            gems_h += BRAWLER_STATS[name][2] * multiplier
+
+    return round(coins_h, 1), round(gems_h, 1)
 
 
 def open_box(box_type):
 
     if box_type == "Brawl Box":
         chances = {
-            "Common": 85,
-            "Rare": 14,
-            "Epic": 1,
+            "Common": 80,
+            "Rare": 18,
+            "Epic": 2,
+            "Mythic": 0,
             "Legendary": 0,
         }
 
     elif box_type == "Big Box":
         chances = {
-            "Common": 50,
+            "Common": 45,
             "Rare": 35,
-            "Epic": 10,
-            "Legendary": 5,
+            "Epic": 14,
+            "Mythic": 5,
+            "Legendary": 1,
         }
 
-    else:
+    else: # Mega Box
         chances = {
             "Common": 15,
             "Rare": 25,
-            "Epic": 35,
-            "Legendary": 23,
+            "Epic": 30,
+            "Mythic": 20,
+            "Legendary": 8,
             "Zakladatel": 2,
         }
 
@@ -178,12 +232,23 @@ def open_box(box_type):
 
     reward = random.choice(available)
 
+    # Logika duplicit - ukládání ve struktuře {level, duplicates}
     if reward not in st.session_state.inventory:
-        st.session_state.inventory[reward] = 1
+        st.session_state.inventory[reward] = {"level": 1, "duplicates": 0}
     else:
-        st.session_state.coins += (
-            BRAWLER_STATS[reward][1] * 10
-        )
+        # Pokud je v uložení stará hodnota (int)
+        if isinstance(st.session_state.inventory[reward], int):
+            st.session_state.inventory[reward] = {"level": st.session_state.inventory[reward], "duplicates": 0}
+            
+        st.session_state.inventory[reward]["duplicates"] += 1
+        
+        # Automatické zvýšení levelu při dosažení dostatečného počtu karet (duplicit)
+        current_lvl = st.session_state.inventory[reward]["level"]
+        needed_cards = current_lvl * 2  # Pro Lv.2 třeba 2 karty, pro Lv.3 třeba 4 karty...
+        
+        if st.session_state.inventory[reward]["duplicates"] >= needed_cards:
+            st.session_state.inventory[reward]["duplicates"] -= needed_cards
+            st.session_state.inventory[reward]["level"] += 1
 
     st.session_state.last_drop = {
         "name": reward,
@@ -418,7 +483,7 @@ with tab_game:
     mined_coins = (coins_h / 3600) * seconds
     mined_gems = (gems_h / 3600) * seconds
 
-    st.write(f"Vytěženo: {round(mined_coins,1)} 🪙")
+    st.write(f"Vytěženo: {round(mined_coins,1)} 🪙 | {round(mined_gems,1)} 💎")
 
     if st.button("💰 Vyzvednout"):
 
@@ -443,9 +508,9 @@ with tab_game:
 
         inventory = sorted(
             st.session_state.inventory.items(),
-            key=lambda x: RARITY_ORDER[
-                BRAWLER_STATS[x[0]][0]
-            ]
+            key=lambda x: RARITY_ORDER.get(
+                BRAWLER_STATS[x[0]][0], 99
+            )
         )
 
         cols = st.columns(5)
@@ -454,13 +519,24 @@ with tab_game:
             "Common": "#ffffff",
             "Rare": "#00ff66",
             "Epic": "#ff00ff",
+            "Mythic": "#ff0000",
             "Legendary": "#ffff00",
             "Zakladatel": "#ff5500"
         }
 
-        for i, (name, count) in enumerate(inventory):
+        for i, (name, item_data) in enumerate(inventory):
 
             rarity = BRAWLER_STATS[name][0]
+            
+            # Zpracování uložení levelu a karet
+            if isinstance(item_data, dict):
+                lvl = item_data.get("level", 1)
+                dups = item_data.get("duplicates", 0)
+            else:
+                lvl = item_data
+                dups = 0
+
+            needed = lvl * 2
 
             with cols[i % 5]:
 
@@ -472,7 +548,8 @@ with tab_game:
                         {name}
                         </b><br>
                         <small>{rarity}</small><br>
-                        ×{count}
+                        <span style="color:#ff8c00; font-weight:bold;">Lv. {lvl}</span><br>
+                        <small>Karty: {dups}/{needed}</small>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -678,7 +755,7 @@ with st.sidebar:
         if st.button("🎁 Odemknout všechny postavy"):
 
             for name in BRAWLER_STATS.keys():
-                st.session_state.inventory[name] = 1
+                st.session_state.inventory[name] = {"level": 1, "duplicates": 0}
 
             save_game()
 
@@ -699,3 +776,4 @@ with st.sidebar:
 
 # Uložení při každé změně stavu
 save_game()
+    
