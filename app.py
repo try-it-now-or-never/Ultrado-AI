@@ -4,7 +4,25 @@ import time
 import random
 import json
 import os
+import hashlib
 from datetime import timedelta
+from supabase import create_client, Client
+
+# ---------------- SUPABASE PŘIPOJENÍ ----------------
+
+@st.cache_resource
+def init_supabase() -> Client:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+try:
+    supabase = init_supabase()
+except Exception as e:
+    supabase = None
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
 
 # ---------------- IMPORTY ----------------
 
@@ -23,26 +41,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- LOKÁLNÍ UKLÁDÁNÍ (LOCALSTORAGE) ----------------
+# ---------------- SUPABASE SYSTÉM PŘIHLÁŠENÍ & UKLÁDÁNÍ ----------------
 
-# Načtení uložení z URL/prohlížeče při spuštění
-query_params = st.query_params
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-if "loaded_from_client" not in st.session_state:
-    if "save_data" in query_params:
-        try:
-            data = json.loads(query_params["save_data"])
-            st.session_state.coins = data.get("coins", 200)
-            st.session_state.gems = data.get("gems", 0)
-            st.session_state.inventory = data.get("inventory", {})
-            st.session_state.last_claim = data.get("last_claim", time.time())
-            st.session_state.last_wheel = data.get("last_wheel", 0)
-            st.session_state.subs = data.get("subs", 0)
-        except Exception:
-            pass
-    st.session_state.loaded_from_client = True
+if "username" not in st.session_state:
+    st.session_state.username = ""
 
-# Standardní nastavení proměnných
+# Standardní nastavení proměnných hry
 if "coins" not in st.session_state:
     st.session_state.coins = 200
 
@@ -66,7 +73,7 @@ if "last_drop" not in st.session_state:
 
 
 def save_game():
-    """Uloží data přímo do prohlížeče daného uživatele (localStorage)."""
+    """Uloží data do Supabase (pokud je hráč přihlášen) i do localStorag-e."""
     data = {
         "coins": st.session_state.coins,
         "gems": st.session_state.gems,
@@ -75,9 +82,18 @@ def save_game():
         "last_wheel": st.session_state.last_wheel,
         "subs": st.session_state.subs,
     }
-    json_str = json.dumps(data)
     
-    # JavaScript pro uložení do localStorage daného zařízení
+    # 1. Uložení do Supabase Cloud Databáze
+    if st.session_state.logged_in and supabase:
+        try:
+            supabase.table("players").update({
+                "save_data": data
+            }).eq("username", st.session_state.username).execute()
+        except Exception:
+            pass
+
+    # 2. Záložní uložení přímo do prohlížeče (localStorage)
+    json_str = json.dumps(data)
     js_code = f"""
     <script>
         localStorage.setItem('ultrado_user_save', '{json_str}');
@@ -85,18 +101,72 @@ def save_game():
     """
     components.html(js_code, height=0, width=0)
 
-# Synchronizace uložení do localStorage při zapnutí stránky
-js_load_code = """
-<script>
-    const savedData = localStorage.getItem('ultrado_user_save');
-    const urlParams = new URLSearchParams(window.location.search);
-    if (savedData && !urlParams.has('save_data')) {
-        urlParams.set('save_data', savedData);
-        window.location.search = urlParams.toString();
-    }
-</script>
-"""
-components.html(js_load_code, height=0, width=0)
+
+# --- OKNO PŘIHLÁŠENÍ (ZOBRAZÍ SE, POKUD HRÁČ NENÍ PŘIHLÁŠEN) ---
+if not st.session_state.logged_in:
+    st.title("⚡ ULTRADO — Přihlášení")
+    
+    tab_login, tab_register = st.tabs(["🔑 Přihlášení", "📝 Registrace"])
+    
+    with tab_login:
+        l_user = st.text_input("Uživatelské jméno", key="login_user")
+        l_pass = st.text_input("Heslo", type="password", key="login_pass")
+        
+        if st.button("Přihlásit se"):
+            if l_user and l_pass and supabase:
+                hashed = hash_password(l_pass)
+                res = supabase.table("players").select("*").eq("username", l_user).eq("password_hash", hashed).execute()
+                
+                if res.data:
+                    st.session_state.logged_in = True
+                    st.session_state.username = l_user
+                    user_data = res.data[0].get("save_data") or {}
+                    
+                    # Načtení dat ze Supabase
+                    st.session_state.coins = user_data.get("coins", 200)
+                    st.session_state.gems = user_data.get("gems", 0)
+                    st.session_state.inventory = user_data.get("inventory", {})
+                    st.session_state.last_claim = user_data.get("last_claim", time.time())
+                    st.session_state.last_wheel = user_data.get("last_wheel", 0)
+                    st.session_state.subs = user_data.get("subs", 0)
+                    
+                    st.success(f"Vítej zpět, {l_user}!")
+                    st.rerun()
+                else:
+                    st.error("Nespravné jméno nebo heslo!")
+            else:
+                st.warning("Vyplň všechna pole.")
+
+    with tab_register:
+        r_user = st.text_input("Nové uživatelské jméno", key="reg_user")
+        r_pass = st.text_input("Nové heslo", type="password", key="reg_pass")
+        
+        if st.button("Vytvořit účet"):
+            if r_user and r_pass and supabase:
+                check = supabase.table("players").select("*").eq("username", r_user).execute()
+                if check.data:
+                    st.error("Toto jméno už existuje!")
+                else:
+                    hashed = hash_password(r_pass)
+                    default_save = {
+                        "coins": 200,
+                        "gems": 0,
+                        "inventory": {},
+                        "last_claim": time.time(),
+                        "last_wheel": 0,
+                        "subs": 0
+                    }
+                    supabase.table("players").insert({
+                        "username": r_user,
+                        "password_hash": hashed,
+                        "save_data": default_save
+                    }).execute()
+                    
+                    st.success("Účet vytvořen! Nyní se můžeš přihlásit.")
+            else:
+                st.warning("Vyplň všechna pole.")
+                
+    st.stop()  # Zastaví načítání hry, dokud se hráč nepřihlásí
 
 
 # ---------------- DATA ----------------
@@ -174,13 +244,11 @@ def get_income():
 
     for name, item_data in st.session_state.inventory.items():
         if name in BRAWLER_STATS:
-            # Zpětná kompatibilita pro staré uložení (pokud uložení obsahovalo pouze číslo)
             if isinstance(item_data, dict):
                 level = item_data.get("level", 1)
             else:
                 level = item_data
 
-            # Každý level nad Level 1 přidává +20% k příjmu
             multiplier = 1 + (level - 1) * 0.20
             
             coins_h += BRAWLER_STATS[name][1] * multiplier
@@ -232,19 +300,16 @@ def open_box(box_type):
 
     reward = random.choice(available)
 
-    # Logika duplicit - ukládání ve struktuře {level, duplicates}
     if reward not in st.session_state.inventory:
         st.session_state.inventory[reward] = {"level": 1, "duplicates": 0}
     else:
-        # Pokud je v uložení stará hodnota (int)
         if isinstance(st.session_state.inventory[reward], int):
             st.session_state.inventory[reward] = {"level": st.session_state.inventory[reward], "duplicates": 0}
             
         st.session_state.inventory[reward]["duplicates"] += 1
         
-        # Automatické zvýšení levelu při dosažení dostatečného počtu karet (duplicit)
         current_lvl = st.session_state.inventory[reward]["level"]
-        needed_cards = current_lvl * 2  # Pro Lv.2 třeba 2 karty, pro Lv.3 třeba 4 karty...
+        needed_cards = current_lvl * 2
         
         if st.session_state.inventory[reward]["duplicates"] >= needed_cards:
             st.session_state.inventory[reward]["duplicates"] -= needed_cards
@@ -308,6 +373,14 @@ h1,h2,h3{
 with st.sidebar:
 
     st.title("⚡ ULTRADO 3.0")
+    st.write(f"👤 Přihlášen: **{st.session_state.username}**")
+    
+    if st.button("🚪 Odhlásit se"):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.rerun()
+
+    st.divider()
 
     st.subheader("📊 Cesta ke slávě")
 
@@ -527,8 +600,7 @@ with tab_game:
         for i, (name, item_data) in enumerate(inventory):
 
             rarity = BRAWLER_STATS[name][0]
-            
-            # Zpracování uložení levelu a karet
+
             if isinstance(item_data, dict):
                 lvl = item_data.get("level", 1)
                 dups = item_data.get("duplicates", 0)
@@ -704,76 +776,4 @@ with tab_studio:
             if op == "+":
                 result = n1 + n2
 
-            elif op == "-":
-                result = n1 - n2
-
-            elif op == "*":
-                result = n1 * n2
-
-            else:
-                if n2 == 0:
-                    result = "Chyba (dělení nulou)"
-                else:
-                    result = n1 / n2
-
-            st.code(f"Výsledek: {result}")
-
-
-# ---------------- ADMIN ----------------
-
-with st.sidebar:
-
-    st.divider()
-
-    st.subheader("🔐 Admin")
-
-    password = st.text_input(
-        "Heslo",
-        type="password"
-    )
-
-    if password == "admin530":
-
-        st.success("Admin režim aktivní")
-
-        if st.button("💰 Přidat mince"):
-
-            st.session_state.coins += 100000
-
-            save_game()
-
-            st.rerun()
-
-        if st.button("💎 Přidat gemy"):
-
-            st.session_state.gems += 1000
-
-            save_game()
-
-            st.rerun()
-
-        if st.button("🎁 Odemknout všechny postavy"):
-
-            for name in BRAWLER_STATS.keys():
-                st.session_state.inventory[name] = {"level": 1, "duplicates": 0}
-
-            save_game()
-
-            st.success("Všechny postavy odemčeny.")
-
-        if st.button("♻️ Vymazat uloženou hru"):
-
-            st.session_state.clear()
-            js_reset = """
-            <script>
-                localStorage.removeItem('ultrado_user_save');
-                window.location.href = window.location.pathname;
-            </script>
-            """
-            components.html(js_reset, height=0, width=0)
-
-            st.rerun()
-
-# Uložení při každé změně stavu
-save_game()
-    
+            
