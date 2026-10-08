@@ -770,7 +770,7 @@ with tab_studio:
             elif op == "*":
                 result = n1 * n2
 
-                        else:
+            else:
                 if n2 == 0:
                     result = "Chyba (dělení nulou)"
                 else:
