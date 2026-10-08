@@ -73,7 +73,7 @@ if "last_drop" not in st.session_state:
 
 
 def save_game():
-    """Uloží data do Supabase (pokud je hráč přihlášen) i do localStorag-e."""
+    """Uloží data do Supabase (pokud je hráč přihlášen) i do localStorage."""
     data = {
         "coins": st.session_state.coins,
         "gems": st.session_state.gems,
@@ -165,8 +165,11 @@ if not st.session_state.logged_in:
                     st.success("Účet vytvořen! Nyní se můžeš přihlásit.")
             else:
                 st.warning("Vyplň všechna pole.")
+
+        # Upozornění pro hráče o uložení dat
+        st.caption("ℹ️ Registrací souhlasíš s uložením herních dat pod zvolenou přezdívkou. Nepoužívej jako přezdívku své reálné jméno.")
                 
-    st.stop()  # Zastaví načítání hry, dokud se hráč nepřihlásí
+    st.stop()
 
 
 # ---------------- DATA ----------------
@@ -180,9 +183,7 @@ RARITY_ORDER = {
     "Common": 5
 }
 
-# Struktura: [Rarita, Mince/h, Gemy/h]
 BRAWLER_STATS = {
-    # ⚪ Common (5 - 25 🪙/h)
     "YouCut Bot": ["Common", 5, 0],
     "Ultrado Pixel": ["Common", 7, 0],
     "Kluk Střihač": ["Common", 10, 0],
@@ -192,8 +193,6 @@ BRAWLER_STATS = {
     "Sběrač Pixelů": ["Common", 20, 0],
     "Ultra Bot": ["Common", 22, 0],
     "Shorts Klikač": ["Common", 25, 0],
-
-    # 🟢 Rare (35 - 90 🪙/h)
     "Filtrová Víla": ["Rare", 35, 0],
     "Digitální Duch": ["Rare", 42, 0],
     "Brawl Expert": ["Rare", 50, 0],
@@ -203,8 +202,6 @@ BRAWLER_STATS = {
     "Zvukový Mistr": ["Rare", 78, 0],
     "Ultra Střihač": ["Rare", 85, 0],
     "Kamera Machr": ["Rare", 90, 0],
-
-    # 🟣 Epic (105 - 215 🪙/h)
     "Ultrido Velitel": ["Epic", 105, 0],
     "Sběrač Coinů": ["Epic", 120, 0],
     "Zlatý Střihač": ["Epic", 135, 0],
@@ -213,8 +210,6 @@ BRAWLER_STATS = {
     "Matematický Král": ["Epic", 185, 0],
     "Ultrado Zaměstnanec": ["Epic", 200, 0],
     "Algoritmus Master": ["Epic", 215, 0],
-
-    # 🔴 Mythic (250 - 700 🪙/h + 0.3 - 1.0 💎/h)
     "Data-Drak": ["Mythic", 250, 0.3],
     "Ultrado Manažer": ["Mythic", 300, 0.4],
     "Kódový Architekt": ["Mythic", 380, 0.5],
@@ -223,16 +218,12 @@ BRAWLER_STATS = {
     "Brawl Taktik": ["Mythic", 580, 0.8],
     "Studio Inženýr": ["Mythic", 640, 0.9],
     "Stream Star": ["Mythic", 700, 1.0],
-
-    # 🟡 Legendary (900 - 1800 🪙/h + 2.0 - 5.0 💎/h)
     "Drahokamový Titán": ["Legendary", 900, 2.0],
     "Zlatý Klikač": ["Legendary", 1100, 2.5],
     "Brawl Král": ["Legendary", 1300, 3.2],
     "Ultrado Titan": ["Legendary", 1500, 3.8],
     "Ultrado MISTR": ["Legendary", 1650, 4.4],
     "Ultrado Vizionář": ["Legendary", 1800, 5.0],
-
-    # 👑 Zakladatel (Unikátní)
     "Zakladatel Ultrado": ["Zakladatel", 3500, 12.0]
 }
 
@@ -277,7 +268,7 @@ def open_box(box_type):
             "Legendary": 1,
         }
 
-    else: # Mega Box
+    else:
         chances = {
             "Common": 15,
             "Rare": 25,
@@ -412,11 +403,8 @@ with st.sidebar:
     with st.expander("✅ Úkoly"):
 
         st.checkbox("Vymyslet téma")
-
         st.checkbox("Natočit video")
-
         st.checkbox("Sestříhat video")
-
         st.checkbox("Vydat video")
 
     with st.expander("🌍 Překladač"):
@@ -776,4 +764,11 @@ with tab_studio:
             if op == "+":
                 result = n1 + n2
 
-            
+            elif op == "-":
+                result = n1 - n2
+
+            elif op == "*":
+                result = n1 * n2
+
+            else:
+                if 
