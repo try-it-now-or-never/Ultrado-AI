@@ -770,5 +770,70 @@ with tab_studio:
             elif op == "*":
                 result = n1 * n2
 
-            else:
-                if 
+                        else:
+                if n2 == 0:
+                    result = "Chyba (dělení nulou)"
+                else:
+                    result = n1 / n2
+
+            st.code(f"Výsledek: {result}")
+
+
+# ---------------- ADMIN ----------------
+
+with st.sidebar:
+
+    st.divider()
+
+    st.subheader("🔐 Admin")
+
+    password = st.text_input(
+        "Heslo",
+        type="password"
+    )
+
+    if password == "admin530":
+
+        st.success("Admin režim aktivní")
+
+        if st.button("💰 Přidat mince"):
+
+            st.session_state.coins += 100000
+
+            save_game()
+
+            st.rerun()
+
+        if st.button("💎 Přidat gemy"):
+
+            st.session_state.gems += 1000
+
+            save_game()
+
+            st.rerun()
+
+        if st.button("🎁 Odemknout všechny postavy"):
+
+            for name in BRAWLER_STATS.keys():
+                st.session_state.inventory[name] = {"level": 1, "duplicates": 0}
+
+            save_game()
+
+            st.success("Všechny postavy odemčeny.")
+
+        if st.button("♻️ Vymazat uloženou hru"):
+
+            st.session_state.clear()
+            js_reset = """
+            <script>
+                localStorage.removeItem('ultrado_user_save');
+                window.location.href = window.location.pathname;
+            </script>
+            """
+            components.html(js_reset, height=0, width=0)
+
+            st.rerun()
+
+# Uložení při každé změně stavu
+save_game()
+            
