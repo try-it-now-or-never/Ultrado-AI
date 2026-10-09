@@ -836,13 +836,11 @@ with tab_ai:
                 with st.spinner("AI přemýšlí..."):
                     ai_reply = None
                     last_error = ""
-                    
-                                    candidate_models = [
+
+                    candidate_models = [
                         "llama-3.1-8b-instant",
                         "llama3-8b-8192"
-                                    ]
-                    
-
+                    ]
                     
                     for model_name in candidate_models:
                         try:
