@@ -8,6 +8,14 @@ import hashlib
 from datetime import timedelta
 from supabase import create_client, Client
 
+# ---------------- AI IMPORT (GROQ) ----------------
+
+try:
+    from groq import Groq
+    GROQ_AVAILABLE = True
+except ImportError:
+    GROQ_AVAILABLE = False
+
 # ---------------- SUPABASE PŘIPOJENÍ ----------------
 
 @st.cache_resource
@@ -70,6 +78,9 @@ if "subs" not in st.session_state:
 
 if "last_drop" not in st.session_state:
     st.session_state.last_drop = None
+
+if "chat_messages" not in st.session_state:
+    st.session_state.chat_messages = []
 
 
 def save_game():
@@ -439,9 +450,10 @@ with st.sidebar:
 
 # ---------------- TABS ----------------
 
-tab_game, tab_studio = st.tabs([
+tab_game, tab_studio, tab_ai = st.tabs([
     "🎮 TYCOON",
-    "🎬 PRODUKČNÍ PANEL"
+    "🎬 PRODUKČNÍ PANEL",
+    "💬 AI CHAT"
 ])
 
 
@@ -757,7 +769,7 @@ with tab_studio:
             "Operace",
             ["+", "-", "*", "/"],
             key="calc_op"
-        )
+                )
 
         if st.button("Vypočítat"):
 
@@ -777,6 +789,67 @@ with tab_studio:
                     result = n1 / n2
 
             st.code(f"Výsledek: {result}")
+
+
+with tab_ai:
+    st.title("🤖 ULTRADO AI ASISTENT")
+    st.caption("Ptej se na cokoliv — od školních dotazů a programování až po herní strategie a nápady na videa!")
+
+    groq_key = st.secrets.get("GROQ_API_KEY")
+
+    if not GROQ_AVAILABLE:
+        st.error("Knihovna 'groq' není nainstalována. Přidej 'groq' do souboru requirements.txt.")
+    elif not groq_key:
+        st.warning("V 'Secrets' chybí klíč GROQ_API_KEY. Vlož ho v nastavení aplikace ve Streamlit Cloud.")
+    else:
+        client = Groq(api_key=groq_key)
+
+        # Zobrazení předchozích zpráv
+        for msg in st.session_state.chat_messages:
+            with st.chat_message(msg["role"]):
+                st.write(msg["content"])
+
+        # Vstup pro novou zprávu
+        user_prompt = st.chat_input("Napiš dotaz nebo se zeptej na hru...")
+
+        if user_prompt:
+            # Uložení a zobrazení dotazu uživatele
+            st.session_state.chat_messages.append({"role": "user", "content": user_prompt})
+            with st.chat_message("user"):
+                st.write(user_prompt)
+
+            # Příprava kontextu pro AI
+            system_prompt = f"""
+            Jsi inteligentní a přátelský AI asistent integrovaný přímo v herním webu 'Ultrado'.
+            Tvé znalosti jsou neomezené – dokážeš odpovídat na jakékoliv otázky (škola, věda, kód, YouTube tvorba, každodenní témata).
+            Zároveň znáš aktuální stav přihlášeného hráče:
+            - Uživatelské jméno: {st.session_state.username}
+            - Mince: {int(st.session_state.coins)} 🪙
+            - Gemy: {int(st.session_state.gems)} 💎
+            - Odběratelé: {st.session_state.subs} 👥
+            - Počet postav v týmu: {len(st.session_state.inventory)}
+
+            Odpovídej vtipně, věcně a v češtině. Pokud se hráč ptá na hru, využij tyto jeho údaje. Pokud se ptá na cokoliv jiného, odpověz mu plnohodnotně jako vševědoucí AI.
+            """
+
+            messages = [{"role": "system", "content": system_prompt}]
+            for m in st.session_state.chat_messages:
+                messages.append({"role": m["role"], "content": m["content"]})
+
+            with st.chat_message("assistant"):
+                with st.spinner("AI přemýšlí..."):
+                    try:
+                        response = client.chat.completions.create(
+                            model="llama-3.3-70b-versatile",
+                            messages=messages,
+                            temperature=0.7,
+                            max_tokens=1000,
+                        )
+                        ai_reply = response.choices[0].message.content
+                        st.write(ai_reply)
+                        st.session_state.chat_messages.append({"role": "assistant", "content": ai_reply})
+                    except Exception as ex:
+                        st.error(f"Chyba při komunikaci s AI: {ex}")
 
 
 # ---------------- ADMIN ----------------
@@ -836,4 +909,4 @@ with st.sidebar:
 
 # Uložení při každé změně stavu
 save_game()
-            
+    
