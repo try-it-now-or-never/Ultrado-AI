@@ -791,7 +791,7 @@ with tab_studio:
             st.code(f"Výsledek: {result}")
 
 
-with tab_ai:
+ with tab_ai:
     st.title("🤖 ULTRADO AI ASISTENT")
     st.caption("Ptej se na cokoliv — od školních dotazů a programování až po herní strategie a nápady na videa!")
 
@@ -815,7 +815,7 @@ with tab_ai:
             with st.chat_message("user"):
                 st.write(user_prompt)
 
-        system_prompt = f"""
+            system_prompt = f"""
             Jsi oficiální asistent v herní aplikaci 'Ultrado'.
             Tvé hlavní pravidlo: NIKDY SI NEVYMÝŠLEJ NEEXISTUJÍCÍ FUNKCE HRY ANI SMYŠLENÉ REKORDY HRÁČŮ!
             
@@ -829,11 +829,10 @@ with tab_ai:
 
             Pokud se hráč zeptá na věc, která ve hře zatím není (např. reálný žebříček rekordů, obchodování mezi hráči, aréna), po pravdě mu řekni, že tato funkce se teprve chystá v budoucích aktualizacích!
             Pokud se ptá na cokoliv mimo hru (škola, věda, kódování, běžný život), odpověz mu přesně a pravdivě jako chytrá AI.
-            Odpovídej vtipně a česky.
             """
 
-        messages = [{"role": "system", "content": system_prompt}]
-         for m in st.session_state.chat_messages:
+            messages = [{"role": "system", "content": system_prompt}]
+            for m in st.session_state.chat_messages:
                 messages.append({"role": m["role"], "content": m["content"]})
 
             with st.chat_message("assistant"):
@@ -841,7 +840,6 @@ with tab_ai:
                     ai_reply = None
                     last_error = ""
                     
-                    # Aktuální aktivní modely na Groq Cloud
                     candidate_models = [
                         "openai/gpt-oss-20b",
                         "openai/gpt-oss-120b",
@@ -869,7 +867,7 @@ with tab_ai:
                         st.session_state.chat_messages.append({"role": "assistant", "content": ai_reply})
                     else:
                         st.error(f"Groq API chyba: {last_error}")
-            
+
         
 
         
