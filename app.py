@@ -833,7 +833,7 @@ with tab_ai:
             """
 
         messages = [{"role": "system", "content": system_prompt}]
-            for m in st.session_state.chat_messages:
+         for m in st.session_state.chat_messages:
                 messages.append({"role": m["role"], "content": m["content"]})
 
             with st.chat_message("assistant"):
