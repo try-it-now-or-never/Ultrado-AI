@@ -2,3 +2,4 @@ wikipedia-api
 deep-translator
 streamlit
 supabase
+groq
