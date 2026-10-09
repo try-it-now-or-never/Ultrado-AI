@@ -815,7 +815,7 @@ with tab_ai:
             with st.chat_message("user"):
                 st.write(user_prompt)
 
-                        system_prompt = f"""
+        system_prompt = f"""
             Jsi oficiální asistent v herní aplikaci 'Ultrado'.
             Tvé hlavní pravidlo: NIKDY SI NEVYMÝŠLEJ NEEXISTUJÍCÍ FUNKCE HRY ANI SMYŠLENÉ REKORDY HRÁČŮ!
             
