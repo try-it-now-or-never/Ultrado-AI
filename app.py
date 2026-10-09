@@ -837,10 +837,12 @@ with tab_ai:
                     ai_reply = None
                     last_error = ""
                     
-                    candidate_models = [
+                                    candidate_models = [
                         "llama-3.1-8b-instant",
-                        "llama-3.3-70b-versatile"
-                    ]
+                        "llama3-8b-8192"
+                                    ]
+                    
+
                     
                     for model_name in candidate_models:
                         try:
