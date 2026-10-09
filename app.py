@@ -838,9 +838,12 @@ with tab_ai:
                     last_error = ""
 
                     candidate_models = [
-                        "llama-3.1-8b-instant",
-                        "llama3-8b-8192"
+                        "openai/gpt-oss-20b",
+                        "openai/gpt-oss-120b",
+                        "qwen/qwen3.8-27b",
+                        "minimaxai/minimax-m2.7"
                     ]
+            
                     
                     for model_name in candidate_models:
                         try:
