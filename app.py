@@ -177,7 +177,6 @@ if not st.session_state.logged_in:
             else:
                 st.warning("Vyplň všechna pole.")
 
-        # Upozornění pro hráče o uložení dat
         st.caption("ℹ️ Registrací souhlasíš s uložením herních dat pod zvolenou přezdívkou. Nepoužívej jako přezdívku své reálné jméno.")
                 
     st.stop()
@@ -446,9 +445,7 @@ with st.sidebar:
         """
         components.html(js_reset, height=0, width=0)
         st.rerun()
-
-
-# ---------------- TABS ----------------
+    # ---------------- TABS ----------------
 
 tab_game, tab_studio, tab_ai = st.tabs([
     "🎮 TYCOON",
@@ -769,7 +766,7 @@ with tab_studio:
             "Operace",
             ["+", "-", "*", "/"],
             key="calc_op"
-                )
+        )
 
         if st.button("Vypočítat"):
 
@@ -791,7 +788,7 @@ with tab_studio:
             st.code(f"Výsledek: {result}")
 
 
- with tab_ai:
+with tab_ai:
     st.title("🤖 ULTRADO AI ASISTENT")
     st.caption("Ptej se na cokoliv — od školních dotazů a programování až po herní strategie a nápady na videa!")
 
@@ -841,10 +838,8 @@ with tab_studio:
                     last_error = ""
                     
                     candidate_models = [
-                        "openai/gpt-oss-20b",
-                        "openai/gpt-oss-120b",
-                        "qwen/qwen3.8-27b",
-                        "minimaxai/minimax-m2.7"
+                        "llama-3.1-8b-instant",
+                        "llama-3.3-70b-versatile"
                     ]
                     
                     for model_name in candidate_models:
@@ -868,9 +863,6 @@ with tab_studio:
                     else:
                         st.error(f"Groq API chyba: {last_error}")
 
-        
-
-        
 
 # ---------------- ADMIN ----------------
 
@@ -927,6 +919,5 @@ with st.sidebar:
 
             st.rerun()
 
-# Uložení při každé změně stavu
 save_game()
     
