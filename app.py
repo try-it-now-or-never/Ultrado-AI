@@ -832,7 +832,7 @@ with tab_ai:
             Odpovídej vtipně a česky.
             """
 
-            messages = [{"role": "system", "content": system_prompt}]
+        messages = [{"role": "system", "content": system_prompt}]
             for m in st.session_state.chat_messages:
                 messages.append({"role": m["role"], "content": m["content"]})
 
