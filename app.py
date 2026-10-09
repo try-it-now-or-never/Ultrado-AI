@@ -798,38 +798,33 @@ with tab_ai:
     groq_key = st.secrets.get("GROQ_API_KEY")
 
     if not GROQ_AVAILABLE:
-        st.error("Knihovna 'groq' není nainstalována. Přidej 'groq' do souboru requirements.txt.")
+        st.error("Knihovna 'groq' není nainstalována v requirements.txt.")
     elif not groq_key:
-        st.warning("V 'Secrets' chybí klíč GROQ_API_KEY. Vlož ho v nastavení aplikace ve Streamlit Cloud.")
+        st.warning("V 'Secrets' chybí klíč GROQ_API_KEY. Vlož ho v nastavení Streamlit Cloud.")
     else:
         client = Groq(api_key=groq_key)
 
-        # Zobrazení předchozích zpráv
         for msg in st.session_state.chat_messages:
             with st.chat_message(msg["role"]):
                 st.write(msg["content"])
 
-        # Vstup pro novou zprávu
         user_prompt = st.chat_input("Napiš dotaz nebo se zeptej na hru...")
 
         if user_prompt:
-            # Uložení a zobrazení dotazu uživatele
             st.session_state.chat_messages.append({"role": "user", "content": user_prompt})
             with st.chat_message("user"):
                 st.write(user_prompt)
 
-            # Příprava kontextu pro AI
             system_prompt = f"""
-            Jsi inteligentní a přátelský AI asistent integrovaný přímo v herním webu 'Ultrado'.
-            Tvé znalosti jsou neomezené – dokážeš odpovídat na jakékoliv otázky (škola, věda, kód, YouTube tvorba, každodenní témata).
-            Zároveň znáš aktuální stav přihlášeného hráče:
-            - Uživatelské jméno: {st.session_state.username}
+            Jsi inteligentní AI asistent přímo v herním webu 'Ultrado'.
+            Tvé znalosti jsou neomezené – odpovídej na cokoliv (škola, kód, YouTube, hry).
+            Stav přihlášeného hráče:
+            - Jméno: {st.session_state.username}
             - Mince: {int(st.session_state.coins)} 🪙
             - Gemy: {int(st.session_state.gems)} 💎
             - Odběratelé: {st.session_state.subs} 👥
-            - Počet postav v týmu: {len(st.session_state.inventory)}
-
-            Odpovídej vtipně, věcně a v češtině. Pokud se hráč ptá na hru, využij tyto jeho údaje. Pokud se ptá na cokoliv jiného, odpověz mu plnohodnotně jako vševědoucí AI.
+            - Postavy: {len(st.session_state.inventory)}
+            Odpovídej vtipně a česky.
             """
 
             messages = [{"role": "system", "content": system_prompt}]
@@ -839,12 +834,14 @@ with tab_ai:
             with st.chat_message("assistant"):
                 with st.spinner("AI přemýšlí..."):
                     ai_reply = None
-                    # Seznam modelů, které se postupně vyzkouší
+                    last_error = ""
+                    
+                    # Aktuální aktivní modely na Groq Cloud
                     candidate_models = [
-                        "llama-3.3-70b-versatile",
-                        "llama3-70b-8192",
-                        "llama3-8b-8192",
-                        "mixtral-8x7b-32768"
+                        "openai/gpt-oss-20b",
+                        "openai/gpt-oss-120b",
+                        "qwen/qwen3.8-27b",
+                        "minimaxai/minimax-m2.7"
                     ]
                     
                     for model_name in candidate_models:
@@ -858,17 +855,16 @@ with tab_ai:
                             ai_reply = response.choices[0].message.content
                             if ai_reply:
                                 break
-                        except Exception:
+                        except Exception as ex:
+                            last_error = str(ex)
                             continue
 
                     if ai_reply:
                         st.write(ai_reply)
                         st.session_state.chat_messages.append({"role": "assistant", "content": ai_reply})
                     else:
-                        st.error("Nepodařilo se připojit k žádnému AI modelu. Zkontroluj platnost GROQ_API_KEY v Secrets.")
-
-    
-    
+                        st.error(f"Groq API chyba: {last_error}")
+            
         
 
         
