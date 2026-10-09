@@ -838,19 +838,40 @@ with tab_ai:
 
             with st.chat_message("assistant"):
                 with st.spinner("AI přemýšlí..."):
-                    try:
-                        response = client.chat.completions.create(
-                            model="llama-3.1-8b-instant",
-                            messages=messages,
-                            temperature=0.7,
-                            max_tokens=1000,
-                        )
-                        ai_reply = response.choices[0].message.content
+                    ai_reply = None
+                    # Seznam modelů, které se postupně vyzkouší
+                    candidate_models = [
+                        "llama-3.3-70b-versatile",
+                        "llama3-70b-8192",
+                        "llama3-8b-8192",
+                        "mixtral-8x7b-32768"
+                    ]
+                    
+                    for model_name in candidate_models:
+                        try:
+                            response = client.chat.completions.create(
+                                model=model_name,
+                                messages=messages,
+                                temperature=0.7,
+                                max_tokens=1000,
+                            )
+                            ai_reply = response.choices[0].message.content
+                            if ai_reply:
+                                break
+                        except Exception:
+                            continue
+
+                    if ai_reply:
                         st.write(ai_reply)
                         st.session_state.chat_messages.append({"role": "assistant", "content": ai_reply})
-                    except Exception as ex:
-                        st.error(f"Chyba při komunikaci s AI: {ex}")
+                    else:
+                        st.error("Nepodařilo se připojit k žádnému AI modelu. Zkontroluj platnost GROQ_API_KEY v Secrets.")
 
+    
+    
+        
+
+        
 
 # ---------------- ADMIN ----------------
 
