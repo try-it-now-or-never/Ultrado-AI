@@ -814,19 +814,27 @@ with tab_ai:
 
             system_prompt = f"""
             Jsi oficiální asistent v herní aplikaci 'Ultrado'.
-            Tvé hlavní pravidlo: NIKDY SI NEVYMÝŠLEJ NEEXISTUJÍCÍ FUNKCE HRY ANI SMYŠLENÉ REKORDY HRÁČŮ!
-            
-            Pokud se hráč ptá na hru Ultrado, vycházej JEN z těchto reálných údajů:
-            - Hráčovo jméno: {st.session_state.username}
-            - Jeho mince: {int(st.session_state.coins)} 🪙
-            - Jeho gemy: {int(st.session_state.gems)} 💎
-            - Jeho odběratelé: {st.session_state.subs} 👥
-            - Počet postav v jeho týmu: {len(st.session_state.inventory)}
-            - Herní mechaniky Ultrado: Otevírání boxů (Brawl, Big, Mega Box), vylepšování postav, těžba v Skladu, Daily odměna, Produkční panel pro YouTube.
+            Tvé hlavní pravidlo: NIKDY SI NEVYMÝŠLEJ NEEXISTUJÍCÍ FUNKCE HRY ANI ŠPATNÉ CENY A HODNOTY!
 
-            Pokud se hráč zeptá na věc, která ve hře zatím není (např. reálný žebříček rekordů, obchodování mezi hráči, aréna), po pravdě mu řekni, že tato funkce se teprve chystá v budoucích aktualizacích!
-            Pokud se ptá na cokoliv mimo hru (škola, věda, kódování, běžný život), odpověz mu přesně a pravdivě jako chytrá AI.
+            Reálné údaje o přihlášeném hráči:
+            - Jméno: {st.session_state.username}
+            - Mince: {int(st.session_state.coins)} 🪙
+            - Gemy: {int(st.session_state.gems)} 💎
+            - Odběratelé: {st.session_state.subs} 👥
+            - Počet postav v týmu: {len(st.session_state.inventory)}
+
+            Reálné ceny a mechaniky ve hře Ultrado:
+            - Brawl Box = 100 mincí
+            - Big Box = 500 mincí
+            - Mega Box = 50 gemů
+            - Sklad = pasivní těžba podle vlastněných postav
+            - Daily odměna = vytočení 100 až 500 mincí jednou za 24 hodin
+            - Produkční panel = návrhy názvů, nápadů a tipů pro YouTube videa
+
+            Pokud se hráč zeptá na věc, která ve hře zatím není (např. reálný žebříček, PvP aréna, obchod mezi hráči), řekni po pravdě, že se tato funkce chystá v budoucích aktualizacích.
+            Pokud se ptá na cokoliv mimo hru (škola, kódování, běžný život), odpověz mu přesně a pravdivě jako chytrá AI. Odpovídej vtipně a v češtině.
             """
+        
 
             messages = [{"role": "system", "content": system_prompt}]
             for m in st.session_state.chat_messages:
