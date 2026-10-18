@@ -5,7 +5,7 @@ import random
 import json
 import os
 import hashlib
-from datetime import timedelta
+from datetime import datetime, timedelta
 from supabase import create_client, Client
 
 # ---------------- AI IMPORT (GROQ) ----------------
@@ -49,6 +49,47 @@ st.set_page_config(
     layout="wide"
 )
 
+# ---------------- DATABÁZE 25 HALLOWEENSKÝCH POSTAV ----------------
+
+HALLOWEEN_CHARACTERS = [
+    # Common (🟢)
+    {"id": "h1", "name": "Zombie Střihač", "rarity": "🟢 Common", "type": "coins", "price": 150, "cph": 6, "gph": 0, "desc": "Zelený zombie se sluchátky, uvolněná ruka mu padá na klávesnici."},
+    {"id": "h2", "name": "Kameraman Kostlivec", "rarity": "🟢 Common", "type": "coins", "price": 300, "cph": 15, "gph": 0, "desc": "Chrastící kostra drží starou, prachem pokrytou kameru."},
+    {"id": "h3", "name": "Pavučinový Zvukař", "rarity": "🟢 Common", "type": "coins", "price": 500, "cph": 25, "gph": 0, "desc": "Postava celá obmotaná pavučinami drží mikrofon pokrytý prachem."},
+    {"id": "h4", "name": "Thumbnail Mumie", "rarity": "🟢 Common", "type": "coins", "price": 700, "cph": 38, "gph": 0, "desc": "Mumie se snaží kreslit na tablet, obvazy se jí pletou do stylusu."},
+    {"id": "h5", "name": "Netopýří Scenárista", "rarity": "🟢 Common", "type": "coins", "price": 900, "cph": 50, "gph": 0, "desc": "Vlkodlak v lidské formě píše scénář, kolem něj krouží netopýři."},
+    
+    # Rare (🔵)
+    {"id": "h6", "name": "Frankensteinův Střihač", "rarity": "🔵 Rare", "type": "coins", "price": 1500, "cph": 80, "gph": 0, "desc": "Obrovské monstrum se sešívanou kůží, monitory jiskří elektrickými výboji."},
+    {"id": "h7", "name": "Duch Animátor 👻", "rarity": "🔵 Rare", "type": "coins", "price": 2200, "cph": 120, "gph": 0, "desc": "Průhledný duch, vznáší se nad klávesnicí a hýbe myší bez doteku."},
+    {"id": "h8", "name": "Vampire Dron 🦇", "rarity": "🔵 Rare", "type": "coins", "price": 3000, "cph": 180, "gph": 0, "desc": "Upír v plášti ovládá dron, který vypadá jako mechanický netopýr."},
+    {"id": "h9", "name": "Čarodějnice Social Media", "rarity": "🔵 Rare", "type": "coins", "price": 4000, "cph": 250, "gph": 0, "desc": "Čarodějnice míchá lektvar v kotli, ze kterého vylétávají ikony sítí."},
+    {"id": "h10", "name": "Kat Režisér", "rarity": "🔵 Rare", "type": "coins", "price": 5500, "cph": 350, "gph": 0, "desc": "Postava v kapuci na režisérské židli místo klapky používá sekeru."},
+    
+    # Epic (🟣)
+    {"id": "h11", "name": "Streamer Vlkodlak", "rarity": "🟣 Epic", "type": "coins", "price": 9000, "cph": 600, "gph": 0, "desc": "Vlkodlak v plné formě kroutí hlavou u RGB mikrofonu a vyje do kamery."},
+    {"id": "h12", "name": "VFX Demon", "rarity": "🟣 Epic", "type": "coins", "price": 13000, "cph": 850, "gph": 0, "desc": "Rohatec s rudou kůží, monitory mu hoří pekelným ohněm."},
+    {"id": "h13", "name": "Krvavý Producer", "rarity": "🟣 Epic", "type": "coins", "price": 19000, "cph": 1200, "gph": 0, "desc": "Upír v drahém obleku, mixážní pult má červená tlačítka jako kapky krve."},
+    {"id": "h14", "name": "Clickbait Smrťák", "rarity": "🟣 Epic", "type": "coins", "price": 27000, "cph": 1800, "gph": 0, "desc": "Smrtka s kosou, na které visí obří svítící žlutý vykřičník."},
+    {"id": "h15", "name": "Hrobník Manažer", "rarity": "🟣 Epic", "type": "coins", "price": 38000, "cph": 2500, "gph": 0, "desc": "Hrobník s rýčem stojí u hrobů padlých sponzorů."},
+    
+    # Legendary (🟡)
+    {"id": "h16", "name": "AI Dýňový Bot", "rarity": "🟡 Legendary", "type": "gems", "price": 20, "cph": 4000, "gph": 0.1, "desc": "Robot s dýní místo hlavy, oči svítí červeně, tvoří videa z ektoplazmy."},
+    {"id": "h17", "name": "Viral Duch", "rarity": "🟡 Legendary", "type": "gems", "price": 30, "cph": 6000, "gph": 0.2, "desc": "Průhledný duch s řetězy vznášející se na vrcholu grafové křivky."},
+    {"id": "h18", "name": "Algoritmus z Pekla", "rarity": "🟡 Legendary", "type": "gems", "price": 50, "cph": 9000, "gph": 0.5, "desc": "Temná bytost s rohy složená z hořícího kódu a pentagramu."},
+    {"id": "h19", "name": "Hrad Drákuly Studio", "rarity": "🟡 Legendary", "type": "gems", "price": 75, "cph": 14000, "gph": 1.0, "desc": "Obrovský temný hrad na skále, okna svítí fialově."},
+    
+    # Event Exclusive (🎃)
+    {"id": "h20", "name": "Bezhlavý Editor", "rarity": "🎃 Event", "type": "coins", "price": 2000, "cph": 100, "gph": 0, "desc": "Postava bez hlavy, hlavu má položenou na stole vedle klávesnice."},
+    {"id": "h21", "name": "Zombie Kameraman", "rarity": "🎃 Event", "type": "coins", "price": 6500, "cph": 450, "gph": 0, "desc": "Zombie s kamerou, kterému odpadává ruka, ale stále drží spoušť."},
+    {"id": "h22", "name": "Pumpkin King 🎃", "rarity": "🎃 Event", "type": "gems", "price": 25, "cph": 4500, "gph": 0.2, "desc": "Postava s hořící dýní místo hlavy drží zlaté YouTube tlačítko."},
+    {"id": "h23", "name": "Zombie Scriptwriter", "rarity": "🎃 Event", "type": "gems", "price": 12, "cph": 2200, "gph": 0, "desc": "Zombie píšící na starém psacím stroji bez přestávky."},
+    {"id": "h24", "name": "Duch Creator 👻🛠️", "rarity": "🎃 Event", "type": "gems", "price": 120, "cph": 22000, "gph": 2.0, "desc": "Průhledný duch programátora sedící u kódu Ultrada."},
+    {"id": "h25", "name": "Zlatá Halloweenská Trofej 🏆", "rarity": "🎃 Event", "type": "gems", "price": 90, "cph": 17000, "gph": 1.5, "desc": "Zlatá dýně se štítkem s YouTube tlačítkem na podstavci."}
+]
+
+HW_CHAR_MAP = {c["id"]: c for c in HALLOWEEN_CHARACTERS}
+
 # ---------------- SUPABASE SYSTÉM PŘIHLÁŠENÍ & UKLÁDÁNÍ ----------------
 
 if "logged_in" not in st.session_state:
@@ -82,6 +123,16 @@ if "last_drop" not in st.session_state:
 if "chat_messages" not in st.session_state:
     st.session_state.chat_messages = []
 
+# Halloweenské proměnné v session state
+if "last_daily_claim" not in st.session_state:
+    st.session_state.last_daily_claim = ""
+
+if "owned_characters" not in st.session_state:
+    st.session_state.owned_characters = []
+
+if "gems_per_hour" not in st.session_state:
+    st.session_state.gems_per_hour = 0.0
+
 
 def save_game():
     """Uloží data do Supabase (pokud je hráč přihlášen) i do localStorage."""
@@ -92,13 +143,19 @@ def save_game():
         "last_claim": st.session_state.last_claim,
         "last_wheel": st.session_state.last_wheel,
         "subs": st.session_state.subs,
+        "last_daily_claim": st.session_state.last_daily_claim,
+        "owned_characters": st.session_state.owned_characters,
+        "gems_per_hour": st.session_state.gems_per_hour
     }
     
     # 1. Uložení do Supabase Cloud Databáze
     if st.session_state.logged_in and supabase:
         try:
             supabase.table("players").update({
-                "save_data": data
+                "save_data": data,
+                "last_daily_claim": st.session_state.last_daily_claim,
+                "owned_characters": st.session_state.owned_characters,
+                "gems_per_hour": st.session_state.gems_per_hour
             }).eq("username", st.session_state.username).execute()
         except Exception:
             pass
@@ -140,6 +197,9 @@ if not st.session_state.logged_in:
                     st.session_state.last_claim = user_data.get("last_claim", time.time())
                     st.session_state.last_wheel = user_data.get("last_wheel", 0)
                     st.session_state.subs = user_data.get("subs", 0)
+                    st.session_state.last_daily_claim = user_data.get("last_daily_claim", res.data[0].get("last_daily_claim", ""))
+                    st.session_state.owned_characters = user_data.get("owned_characters", res.data[0].get("owned_characters", []))
+                    st.session_state.gems_per_hour = user_data.get("gems_per_hour", res.data[0].get("gems_per_hour", 0.0))
                     
                     st.success(f"Vítej zpět, {l_user}!")
                     st.rerun()
@@ -165,12 +225,18 @@ if not st.session_state.logged_in:
                         "inventory": {},
                         "last_claim": time.time(),
                         "last_wheel": 0,
-                        "subs": 0
+                        "subs": 0,
+                        "last_daily_claim": "",
+                        "owned_characters": [],
+                        "gems_per_hour": 0.0
                     }
                     supabase.table("players").insert({
                         "username": r_user,
                         "password_hash": hashed,
-                        "save_data": default_save
+                        "save_data": default_save,
+                        "last_daily_claim": "",
+                        "owned_characters": [],
+                        "gems_per_hour": 0.0
                     }).execute()
                     
                     st.success("Účet vytvořen! Nyní se můžeš přihlásit.")
@@ -241,7 +307,7 @@ BRAWLER_STATS = {
 
 def get_income():
     coins_h = 0
-    gems_h = 0
+    gems_h = st.session_state.gems_per_hour
 
     for name, item_data in st.session_state.inventory.items():
         if name in BRAWLER_STATS:
@@ -254,6 +320,12 @@ def get_income():
             
             coins_h += BRAWLER_STATS[name][1] * multiplier
             gems_h += BRAWLER_STATS[name][2] * multiplier
+
+    # Přičtení příjmu z halloweenských postav
+    for char_id in st.session_state.owned_characters:
+        if char_id in HW_CHAR_MAP:
+            coins_h += HW_CHAR_MAP[char_id]["cph"]
+            gems_h += HW_CHAR_MAP[char_id]["gph"]
 
     return round(coins_h, 1), round(gems_h, 1)
 
@@ -445,15 +517,163 @@ with st.sidebar:
         """
         components.html(js_reset, height=0, width=0)
         st.rerun()
-    # ---------------- TABS ----------------
+
+
+# ==============================================================================
+# HALLOWEENSKÝ BANNER S ODPOČTEM (NAHORU NAD ZÁLOŽKY)
+# ==============================================================================
+event_end_date = datetime(2026, 11, 8, 23, 59, 59)
+now = datetime.now()
+
+if now <= event_end_date:
+    time_left = event_end_date - now
+    days = time_left.days
+    hours = time_left.seconds // 3600
+    minutes = (time_left.seconds % 3600) // 60
+    
+    st.markdown(
+        f"""
+        <div style="
+            background: linear-gradient(90deg, #ff6600, #9900cc);
+            padding: 10px 15px;
+            border-radius:12px;
+    text-align:center;
+    margin-bottom:10px;
+    border-top:4px solid #ff8c00;
+}
+
+.wiki-box {
+    max-height: 250px;
+    overflow-y: auto;
+    background: #1c1f26;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ff8c00;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    color: #e0e0e0;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ---------------- SIDEBAR ----------------
+
+with st.sidebar:
+
+    st.title("⚡ ULTRADO 3.0")
+    st.write(f"👤 Přihlášen: **{st.session_state.username}**")
+    
+    if st.button("🚪 Odhlásit se"):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.rerun()
+
+    st.divider()
+
+    st.subheader("📊 Cesta ke slávě")
+
+    st.session_state.subs = st.number_input(
+        "Odběratelů",
+        value=st.session_state.subs,
+        step=1
+    )
+
+    cil = st.number_input(
+        "Cíl",
+        value=100,
+        step=1
+    )
+
+    if cil > 0:
+        progress = min(
+            st.session_state.subs / cil,
+            1.0
+        )
+
+        st.progress(progress)
+
+        if progress >= 1:
+            st.success("Cíl splněn! 🏆")
+
+    st.divider()
+
+    with st.expander("✅ Úkoly"):
+
+        st.checkbox("Vymyslet téma")
+        st.checkbox("Natočit video")
+        st.checkbox("Sestříhat video")
+        st.checkbox("Vydat video")
+
+    with st.expander("🌍 Překladač"):
+
+        text = st.text_area("Česky")
+
+        if st.button("Přeložit"):
+
+            if IMPORT_ERR:
+                st.error("Chybí knihovna deep-translator.")
+            else:
+                vysledek = GoogleTranslator(
+                    source="cs",
+                    target="en"
+                ).translate(text)
+
+                st.success(vysledek)
+
+    st.divider()
+
+    if st.button("🔄 Reset hry"):
+        st.session_state.clear()
+        js_reset = """
+        <script>
+            localStorage.removeItem('ultrado_user_save');
+            window.location.href = window.location.pathname;
+        </script>
+        """
+        components.html(js_reset, height=0, width=0)
+        st.rerun()
+
+
+# ==============================================================================
+# HALLOWEENSKÝ BANNER S ODPOČTEM (NAHORU NAD ZÁLOŽKY)
+# ==============================================================================
+event_end_date = datetime(2026, 11, 8, 23, 59, 59)
+now = datetime.now()
+
+if now <= event_end_date:
+    time_left = event_end_date - now
+    days = time_left.days
+    hours = time_left.seconds // 3600
+    minutes = (time_left.seconds % 3600) // 60
+    
+    st.markdown(
+        f"""
+        <div style="
+            background: linear-gradient(90deg, #ff6600, #9900cc);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 15px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+        ">
+            🎃 HALLOWEENSKÝ EVENT BĚŽÍ! | Zbývá: {days} dní, {hours} hod a {minutes} min (končí 8. 11.) 🎃
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ---------------- TABS ----------------
 
 tab_game, tab_studio, tab_ai = st.tabs([
     "🎮 TYCOON",
     "🎬 PRODUKČNÍ PANEL",
     "💬 AI CHAT"
 ])
-
-
 with tab_game:
 
     coins_h, gems_h = get_income()
@@ -504,6 +724,94 @@ with tab_game:
         st.info(
             "Daily odměna zatím není dostupná."
         )
+
+    st.divider()
+
+    # ==========================================================================
+    # 🛒 DENNÍ OBCHOD & HALLOWEENSKÁ NABÍDKA
+    # ==========================================================================
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    with st.expander("🛒 **DENNÍ OBCHOD & HALLOWEENSKÁ NABÍDKA**", expanded=False):
+        
+        # --- 🎁 1. DENNÍ DÁREK ZDARMA ---
+        st.subheader("🎁 Denní dárek zdarma")
+        last_claim = st.session_state.get("last_daily_claim", "")
+
+        if last_claim == today_str:
+            st.info("✅ Dnešní dárek zdarma už máš vyzvednutý! Přijď zase zítra.")
+        else:
+            if st.button("🎁 Vyzvednout dnešní odměnu zdarma", type="primary", use_container_width=True):
+                reward_type = random.choices(["coins", "gems"], weights=[80, 20])[0]
+                
+                if reward_type == "coins":
+                    amount = int(random.triangular(25, 200, 40))
+                    st.session_state.coins += amount
+                    st.success(f"🎉 Získal jsi zdarma **{amount} mincí** 🪙!")
+                else:
+                    amount = int(random.triangular(1, 30, 3))
+                    st.session_state.gems += amount
+                    st.success(f"💎 Vzácný drop! Získal jsi **{amount} gemů** 💎!")
+                
+                st.session_state.last_daily_claim = today_str
+                save_game()
+                st.rerun()
+
+        st.divider()
+
+        # --- 🎃 2. DENNÍ ROTACE POSTAV ---
+        if datetime.now() <= event_end_date:
+            st.subheader("🎃 Dnešní exkluzivní nabídka (24h)")
+            st.caption("Postavy se mění každý den o půlnoci. Zakoupené postavy se z nabídky vyřadí!")
+
+            available_chars = [c for c in HALLOWEEN_CHARACTERS if c["id"] not in st.session_state.owned_characters]
+
+            if not available_chars:
+                st.balloons()
+                st.success("🏆 Úžasné! Vlastníš už všechny Halloweenské postavy!")
+            else:
+                random.seed(today_str)
+                daily_count = min(2, len(available_chars))
+                daily_offers = random.sample(available_chars, daily_count)
+                random.seed()
+
+                col1, col2 = st.columns(2)
+                cols = [col1, col2]
+
+                for i, char in enumerate(daily_offers):
+                    with cols[i]:
+                        st.markdown(f"### {char['name']}")
+                        st.caption(f"Vzácnost: **{char['rarity']}**")
+                        st.write(f"*{char['desc']}*")
+                        
+                        yield_str = f"🪙 **+{char['cph']}** / hod"
+                        if char['gph'] > 0:
+                            yield_str += f" | 💎 **+{char['gph']}** / hod"
+                        st.markdown(f"📈 **Příjem:** {yield_str}")
+                        
+                        price_icon = "🪙" if char["type"] == "coins" else "💎"
+                        price_text = f"{char['price']} {price_icon}"
+
+                        if st.button(f"Koupit za {price_text}", key=f"buy_{char['id']}", use_container_width=True):
+                            has_currency = (st.session_state.coins >= char['price']) if char['type'] == "coins" else (st.session_state.gems >= char['price'])
+                            
+                            if has_currency:
+                                if char['type'] == "coins":
+                                    st.session_state.coins -= char['price']
+                                else:
+                                    st.session_state.gems -= char['price']
+                                
+                                st.session_state.owned_characters.append(char['id'])
+                                st.session_state.gems_per_hour = float(st.session_state.gems_per_hour) + char['gph']
+                                save_game()
+
+                                st.success(f"🎉 Úspěšně jsi zakoupil {char['name']}!")
+                                st.rerun()
+                            else:
+                                st.error("Nemáš dostatek financí na tuto postavu!")
+        else:
+            st.warning("🎃 Halloweenský event již skončil. Těš se na další sezónní akci!")
+
     st.divider()
 
     # ---------------- SHOP ----------------
@@ -574,16 +882,10 @@ with tab_game:
 
     st.subheader("🎒 Tvůj tým")
 
-    if st.session_state.inventory:
-
-        inventory = sorted(
-            st.session_state.inventory.items(),
-            key=lambda x: RARITY_ORDER.get(
-                BRAWLER_STATS[x[0]][0], 99
-            )
-        )
+    if st.session_state.inventory or st.session_state.owned_characters:
 
         cols = st.columns(5)
+        col_idx = 0
 
         colors = {
             "Common": "#ffffff",
@@ -591,11 +893,43 @@ with tab_game:
             "Epic": "#ff00ff",
             "Mythic": "#ff0000",
             "Legendary": "#ffff00",
-            "Zakladatel": "#ff5500"
+            "Zakladatel": "#ff5500",
+            "🟢 Common": "#00ff66",
+            "🔵 Rare": "#0088ff",
+            "🟣 Epic": "#aa00ff",
+            "🟡 Legendary": "#ffff00",
+            "🎃 Event": "#ff6600"
         }
 
-        for i, (name, item_data) in enumerate(inventory):
+        # 1. Halloweenské postavy
+        for char_id in st.session_state.owned_characters:
+            if char_id in HW_CHAR_MAP:
+                char = HW_CHAR_MAP[char_id]
+                rarity = char["rarity"]
+                
+                with cols[col_idx % 5]:
+                    st.markdown(
+                        f"""
+                        <div class="brawler-card" style="border-top-color:{colors.get(rarity, '#ff6600')}">
+                            <b style="color:{colors.get(rarity, '#ff6600')}">{char['name']}</b><br>
+                            <small>{rarity}</small><br>
+                            <span style="color:#ff8c00; font-weight:bold;">🎃 HALLOWEEN</span><br>
+                            <small>🪙 +{char['cph']}/h | 💎 +{char['gph']}/h</small>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                col_idx += 1
 
+        # 2. Standardní Brawleři
+        inventory = sorted(
+            st.session_state.inventory.items(),
+            key=lambda x: RARITY_ORDER.get(
+                BRAWLER_STATS[x[0]][0], 99
+            )
+        )
+
+        for name, item_data in inventory:
             rarity = BRAWLER_STATS[name][0]
 
             if isinstance(item_data, dict):
@@ -607,13 +941,13 @@ with tab_game:
 
             needed = lvl * 2
 
-            with cols[i % 5]:
+            with cols[col_idx % 5]:
 
                 st.markdown(
                     f"""
                     <div class="brawler-card"
-                    style="border-top-color:{colors[rarity]}">
-                        <b style="color:{colors[rarity]}">
+                    style="border-top-color:{colors.get(rarity, '#ffffff')}">
+                        <b style="color:{colors.get(rarity, '#ffffff')}">
                         {name}
                         </b><br>
                         <small>{rarity}</small><br>
@@ -623,6 +957,7 @@ with tab_game:
                     """,
                     unsafe_allow_html=True,
                 )
+            col_idx += 1
 
     else:
 
@@ -768,90 +1103,54 @@ with tab_studio:
             key="calc_op"
         )
 
-        if st.button("Vypočítat"):
-
+        if st.button("Spočítat"):
             if op == "+":
-                result = n1 + n2
-
+                res = n1 + n2
             elif op == "-":
-                result = n1 - n2
-
+                res = n1 - n2
             elif op == "*":
-                result = n1 * n2
+                res = n1 * n2
+            elif op == "/":
+                res = n1 / n2 if n2 != 0 else "Nelze dělit nulou!"
+            st.write(f"**Výsledek:** {res}")
 
-            else:
-                if n2 == 0:
-                    result = "Chyba (dělení nulou)"
-                else:
-                    result = n1 / n2
 
-            st.code(f"Výsledek: {result}")
-
+# ---------------- AI CHAT ----------------
 
 with tab_ai:
-    st.title("🤖 ULTRADO AI ASISTENT")
-    st.caption("Ptej se na cokoliv — od školních dotazů a programování až po herní strategie a nápady na videa!")
+    st.title("💬 AI Asistent Ultrado")
 
-    groq_key = st.secrets.get("GROQ_API_KEY")
+    for msg in st.session_state.chat_messages:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
 
-    if not GROQ_AVAILABLE:
-        st.error("Knihovna 'groq' není nainstalována v requirements.txt.")
-    elif not groq_key:
-        st.warning("V 'Secrets' chybí klíč GROQ_API_KEY. Vlož ho v nastavení Streamlit Cloud.")
-    else:
-        client = Groq(api_key=groq_key)
+    user_query = st.chat_input("Zeptej se AI asistenta...")
 
-        for msg in st.session_state.chat_messages:
-            with st.chat_message(msg["role"]):
-                st.write(msg["content"])
+    if user_query:
+        st.session_state.chat_messages.append({"role": "user", "content": user_query})
+        with st.chat_message("user"):
+            st.write(user_query)
 
-        user_prompt = st.chat_input("Napiš dotaz nebo se zeptej na hru...")
-
-        if user_prompt:
-            st.session_state.chat_messages.append({"role": "user", "content": user_prompt})
-            with st.chat_message("user"):
-                st.write(user_prompt)
-
-            system_prompt = f"""
-            Jsi oficiální asistent v herní aplikaci 'Ultrado'.
-            Tvé hlavní pravidlo: NIKDY SI NEVYMÝŠLEJ NEEXISTUJÍCÍ FUNKCE HRY ANI ŠPATNÉ CENY A HODNOTY!
-
-            Reálné údaje o přihlášeném hráči:
-            - Jméno: {st.session_state.username}
-            - Mince: {int(st.session_state.coins)} 🪙
-            - Gemy: {int(st.session_state.gems)} 💎
-            - Odběratelé: {st.session_state.subs} 👥
-            - Počet postav v týmu: {len(st.session_state.inventory)}
-
-            Reálné ceny a mechaniky ve hře Ultrado:
-            - Brawl Box = 100 mincí
-            - Big Box = 500 mincí
-            - Mega Box = 50 gemů
-            - Sklad = pasivní těžba podle vlastněných postav
-            - Daily odměna = vytočení 100 až 500 mincí jednou za 24 hodin
-            - Produkční panel = návrhy názvů, nápadů a tipů pro YouTube videa
-
-            Pokud se hráč zeptá na věc, která ve hře zatím není (např. reálný žebříček, PvP aréna, obchod mezi hráči), řekni po pravdě, že se tato funkce chystá v budoucích aktualizacích.
-            Pokud se ptá na cokoliv mimo hru (škola, kódování, běžný život), odpověz mu přesně a pravdivě jako chytrá AI. Odpovídej vtipně a v češtině.
-            """
-        
-
-            messages = [{"role": "system", "content": system_prompt}]
-            for m in st.session_state.chat_messages:
-                messages.append({"role": m["role"], "content": m["content"]})
-
-            with st.chat_message("assistant"):
-                with st.spinner("AI přemýšlí..."):
-                    ai_reply = None
-                    last_error = ""
-
+        with st.chat_message("assistant"):
+            if not GROQ_AVAILABLE:
+                st.error("Knihovna Groq není nainstalována.")
+            else:
+                groq_key = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
+                if not groq_key:
+                    st.error("Chybí GROQ_API_KEY v st.secrets!")
+                else:
+                    client = Groq(api_key=groq_key)
+                    
+                    messages = [{"role": m["role"], "content": m["content"]} for m in st.session_state.chat_messages]
                     candidate_models = [
                         "openai/gpt-oss-20b",
                         "openai/gpt-oss-120b",
                         "qwen/qwen3.8-27b",
                         "minimaxai/minimax-m2.7"
                     ]
-            
+                    
+                    ai_reply = None
+                    last_error = ""
                     
                     for model_name in candidate_models:
                         try:
@@ -917,6 +1216,11 @@ with st.sidebar:
 
             st.success("Všechny postavy odemčeny.")
 
+        if st.button("🎃 Odemknout všechny Halloweenské postavy"):
+            st.session_state.owned_characters = [c["id"] for c in HALLOWEEN_CHARACTERS]
+            save_game()
+            st.success("Všechny Halloweenské postavy odemčeny.")
+
         if st.button("♻️ Vymazat uloženou hru"):
 
             st.session_state.clear()
@@ -931,4 +1235,4 @@ with st.sidebar:
             st.rerun()
 
 save_game()
-    
+                                    
