@@ -49,43 +49,43 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- DATABÁZE 25 HALLOWEENSKÝCH POSTAV ----------------
+# ---------------- DATABÁZE 25 HALLOWEENSKÝCH POSTAV (VYVÁŽENÉ) ----------------
 
 HALLOWEEN_CHARACTERS = [
     # Common (🟢)
-    {"id": "h1", "name": "Zombie Střihač", "rarity": "🟢 Common", "type": "coins", "price": 150, "cph": 6, "gph": 0, "desc": "Zelený zombie se sluchátky, uvolněná ruka mu padá na klávesnici."},
-    {"id": "h2", "name": "Kameraman Kostlivec", "rarity": "🟢 Common", "type": "coins", "price": 300, "cph": 15, "gph": 0, "desc": "Chrastící kostra drží starou, prachem pokrytou kameru."},
-    {"id": "h3", "name": "Pavučinový Zvukař", "rarity": "🟢 Common", "type": "coins", "price": 500, "cph": 25, "gph": 0, "desc": "Postava celá obmotaná pavučinami drží mikrofon pokrytý prachem."},
-    {"id": "h4", "name": "Thumbnail Mumie", "rarity": "🟢 Common", "type": "coins", "price": 700, "cph": 38, "gph": 0, "desc": "Mumie se snaží kreslit na tablet, obvazy se jí pletou do stylusu."},
-    {"id": "h5", "name": "Netopýří Scenárista", "rarity": "🟢 Common", "type": "coins", "price": 900, "cph": 50, "gph": 0, "desc": "Vlkodlak v lidské formě píše scénář, kolem něj krouží netopýři."},
+    {"id": "h1", "name": "Zombie Střihač", "rarity": "🟢 Common", "type": "coins", "price": 150, "cph": 6, "gph": 0, "desc": "Nespí, nejí, jen stříhá... i když mu odpadávají prsty."},
+    {"id": "h2", "name": "Kameraman Kostlivec", "rarity": "🟢 Common", "type": "coins", "price": 300, "cph": 12, "gph": 0, "desc": "Jeho záběry jsou celkem chrastivé, ale drží kameru pevně."},
+    {"id": "h3", "name": "Pavučinový Zvukař", "rarity": "🟢 Common", "type": "coins", "price": 500, "cph": 20, "gph": 0, "desc": "Mikrofon má obmotaný pavučinami pro extra temný efekt."},
+    {"id": "h4", "name": "Thumbnail Mumie", "rarity": "🟢 Common", "type": "coins", "price": 700, "cph": 30, "gph": 0, "desc": "Kreslí náhledovky z obvazů. Vypadají překvapivě dobře."},
+    {"id": "h5", "name": "Netopýří Scenárista", "rarity": "🟢 Common", "type": "coins", "price": 900, "cph": 40, "gph": 0, "desc": "Píše příběhy pouze za úplňku a při svíčkách."},
     
     # Rare (🔵)
-    {"id": "h6", "name": "Frankensteinův Střihač", "rarity": "🔵 Rare", "type": "coins", "price": 1500, "cph": 80, "gph": 0, "desc": "Obrovské monstrum se sešívanou kůží, monitory jiskří elektrickými výboji."},
-    {"id": "h7", "name": "Duch Animátor 👻", "rarity": "🔵 Rare", "type": "coins", "price": 2200, "cph": 120, "gph": 0, "desc": "Průhledný duch, vznáší se nad klávesnicí a hýbe myší bez doteku."},
-    {"id": "h8", "name": "Vampire Dron 🦇", "rarity": "🔵 Rare", "type": "coins", "price": 3000, "cph": 180, "gph": 0, "desc": "Upír v plášti ovládá dron, který vypadá jako mechanický netopýr."},
-    {"id": "h9", "name": "Čarodějnice Social Media", "rarity": "🔵 Rare", "type": "coins", "price": 4000, "cph": 250, "gph": 0, "desc": "Čarodějnice míchá lektvar v kotli, ze kterého vylétávají ikony sítí."},
-    {"id": "h10", "name": "Kat Režisér", "rarity": "🔵 Rare", "type": "coins", "price": 5500, "cph": 350, "gph": 0, "desc": "Postava v kapuci na režisérské židli místo klapky používá sekeru."},
+    {"id": "h6", "name": "Frankensteinův Střihač", "rarity": "🔵 Rare", "type": "coins", "price": 1500, "cph": 60, "gph": 0, "desc": "Sešívá jednotlivé klipy dohromady bleskovou rychlostí."},
+    {"id": "h7", "name": "Duch Animátor 👻", "rarity": "🔵 Rare", "type": "coins", "price": 2200, "cph": 85, "gph": 0, "desc": "Animuje bez doteku klávesnice. Klávesy se mačkají samy!"},
+    {"id": "h8", "name": "Vampire Dron 🦇", "rarity": "🔵 Rare", "type": "coins", "price": 3000, "cph": 110, "gph": 0, "desc": "Létá nad studiem a natáčí záběry, ze kterých mrazí v zádech."},
+    {"id": "h9", "name": "Čarodějnice Social Media", "rarity": "🔵 Rare", "type": "coins", "price": 4000, "cph": 140, "gph": 0, "desc": "Míchá v kotli tajemné lektvary pro virální dosah."},
+    {"id": "h10", "name": "Kat Režisér", "rarity": "🔵 Rare", "type": "coins", "price": 5500, "cph": 180, "gph": 0, "desc": "Když se záběr nepovede, nekompromisně ho okamžitě utne."},
     
     # Epic (🟣)
-    {"id": "h11", "name": "Streamer Vlkodlak", "rarity": "🟣 Epic", "type": "coins", "price": 9000, "cph": 600, "gph": 0, "desc": "Vlkodlak v plné formě kroutí hlavou u RGB mikrofonu a vyje do kamery."},
-    {"id": "h12", "name": "VFX Demon", "rarity": "🟣 Epic", "type": "coins", "price": 13000, "cph": 850, "gph": 0, "desc": "Rohatec s rudou kůží, monitory mu hoří pekelným ohněm."},
-    {"id": "h13", "name": "Krvavý Producer", "rarity": "🟣 Epic", "type": "coins", "price": 19000, "cph": 1200, "gph": 0, "desc": "Upír v drahém obleku, mixážní pult má červená tlačítka jako kapky krve."},
-    {"id": "h14", "name": "Clickbait Smrťák", "rarity": "🟣 Epic", "type": "coins", "price": 27000, "cph": 1800, "gph": 0, "desc": "Smrtka s kosou, na které visí obří svítící žlutý vykřičník."},
-    {"id": "h15", "name": "Hrobník Manažer", "rarity": "🟣 Epic", "type": "coins", "price": 38000, "cph": 2500, "gph": 0, "desc": "Hrobník s rýčem stojí u hrobů padlých sponzorů."},
+    {"id": "h11", "name": "Streamer Vlkodlak", "rarity": "🟣 Epic", "type": "coins", "price": 9000, "cph": 250, "gph": 0, "desc": "Při nočních streamech pořádně vyje na své diváky."},
+    {"id": "h12", "name": "VFX Demon", "rarity": "🟣 Epic", "type": "coins", "price": 13000, "cph": 320, "gph": 0, "desc": "Jeho efekty jsou doslova pekelně dobré."},
+    {"id": "h13", "name": "Krvavý Producer", "rarity": "🟣 Epic", "type": "coins", "price": 19000, "cph": 400, "gph": 0, "desc": "Investuje do videí s chladnou hlavou a elegancí."},
+    {"id": "h14", "name": "Clickbait Smrťák", "rarity": "🟣 Epic", "type": "coins", "price": 27000, "cph": 500, "gph": 0, "desc": "Na jeho vykřičníky v náhledovkách klikne úplně každý."},
+    {"id": "h15", "name": "Hrobník Manažer", "rarity": "🟣 Epic", "type": "coins", "price": 38000, "cph": 650, "gph": 0, "desc": "Dokáže pohřbít jakoukoliv konkurenci."},
     
     # Legendary (🟡)
-    {"id": "h16", "name": "AI Dýňový Bot", "rarity": "🟡 Legendary", "type": "gems", "price": 20, "cph": 4000, "gph": 0.1, "desc": "Robot s dýní místo hlavy, oči svítí červeně, tvoří videa z ektoplazmy."},
-    {"id": "h17", "name": "Viral Duch", "rarity": "🟡 Legendary", "type": "gems", "price": 30, "cph": 6000, "gph": 0.2, "desc": "Průhledný duch s řetězy vznášející se na vrcholu grafové křivky."},
-    {"id": "h18", "name": "Algoritmus z Pekla", "rarity": "🟡 Legendary", "type": "gems", "price": 50, "cph": 9000, "gph": 0.5, "desc": "Temná bytost s rohy složená z hořícího kódu a pentagramu."},
-    {"id": "h19", "name": "Hrad Drákuly Studio", "rarity": "🟡 Legendary", "type": "gems", "price": 75, "cph": 14000, "gph": 1.0, "desc": "Obrovský temný hrad na skále, okna svítí fialově."},
+    {"id": "h16", "name": "AI Dýňový Bot", "rarity": "🟡 Legendary", "type": "gems", "price": 20, "cph": 800, "gph": 0.1, "desc": "Generuje strašidelně dobrý obsah 24/7."},
+    {"id": "h17", "name": "Viral Duch", "rarity": "🟡 Legendary", "type": "gems", "price": 30, "cph": 1000, "gph": 0.2, "desc": "Prochází algoritmy jako zdí a přináší lavinu sledovanosti."},
+    {"id": "h18", "name": "Algoritmus z Pekla", "rarity": "🟡 Legendary", "type": "gems", "price": 50, "cph": 1300, "gph": 0.3, "desc": "Tento kód drží tvoje videa na hlavní stránce YouTube."},
+    {"id": "h19", "name": "Hrad Drákuly Studio", "rarity": "🟡 Legendary", "type": "gems", "price": 75, "cph": 1600, "gph": 0.5, "desc": "Nejluxusnější temné studio s neomezeným rozpočtem."},
     
     # Event Exclusive (🎃)
-    {"id": "h20", "name": "Bezhlavý Editor", "rarity": "🎃 Event", "type": "coins", "price": 2000, "cph": 100, "gph": 0, "desc": "Postava bez hlavy, hlavu má položenou na stole vedle klávesnice."},
-    {"id": "h21", "name": "Zombie Kameraman", "rarity": "🎃 Event", "type": "coins", "price": 6500, "cph": 450, "gph": 0, "desc": "Zombie s kamerou, kterému odpadává ruka, ale stále drží spoušť."},
-    {"id": "h22", "name": "Pumpkin King 🎃", "rarity": "🎃 Event", "type": "gems", "price": 25, "cph": 4500, "gph": 0.2, "desc": "Postava s hořící dýní místo hlavy drží zlaté YouTube tlačítko."},
-    {"id": "h23", "name": "Zombie Scriptwriter", "rarity": "🎃 Event", "type": "gems", "price": 12, "cph": 2200, "gph": 0, "desc": "Zombie píšící na starém psacím stroji bez přestávky."},
-    {"id": "h24", "name": "Duch Creator 👻🛠️", "rarity": "🎃 Event", "type": "gems", "price": 120, "cph": 22000, "gph": 2.0, "desc": "Průhledný duch programátora sedící u kódu Ultrada."},
-    {"id": "h25", "name": "Zlatá Halloweenská Trofej 🏆", "rarity": "🎃 Event", "type": "gems", "price": 90, "cph": 17000, "gph": 1.5, "desc": "Zlatá dýně se štítkem s YouTube tlačítkem na podstavci."}
+    {"id": "h20", "name": "Bezhlavý Editor", "rarity": "🎃 Event", "type": "coins", "price": 2000, "cph": 75, "gph": 0, "desc": "Ztratil hlavu, ale na střih má pořád skvělý cit."},
+    {"id": "h21", "name": "Zombie Kameraman", "rarity": "🎃 Event", "type": "coins", "price": 6500, "cph": 200, "gph": 0, "desc": "Udrží kameru stabilní i během apokalypsy."},
+    {"id": "h22", "name": "Pumpkin King 🎃", "rarity": "🎃 Event", "type": "gems", "price": 25, "cph": 900, "gph": 0.1, "desc": "Vládce Halloweenu přináší královské zisky."},
+    {"id": "h23", "name": "Zombie Scriptwriter", "rarity": "🎃 Event", "type": "gems", "price": 12, "cph": 500, "gph": 0, "desc": "Píše scénáře bez přestávky celou věčnost."},
+    {"id": "h24", "name": "Duch Creator 👻🛠️", "rarity": "🎃 Event", "type": "gems", "price": 120, "cph": 2000, "gph": 0.8, "desc": "Legenda tvorby obsahu, která tvoří i ze záhrobí."},
+    {"id": "h25", "name": "Zlatá Halloweenská Trofej 🏆", "rarity": "🎃 Event", "type": "gems", "price": 90, "cph": 1700, "gph": 0.6, "desc": "Exkluzivní trofej garantující trvalý přísun statistik."}
 ]
 
 HW_CHAR_MAP = {c["id"]: c for c in HALLOWEEN_CHARACTERS}
@@ -605,7 +605,7 @@ with tab_game:
     st.divider()
 
     # ==========================================================================
-    # 🛒 DENNÍ OBCHOD & HALLOWEENSKÁ NABÍDKA
+    # 🛒 DENNÍ OBCHOD & HALLOWEENSKÁ NABÍDKA (OPRAVENÁ STABILNÍ ROTACE)
     # ==========================================================================
     today_str = datetime.now().strftime("%Y-%m-%d")
 
@@ -636,39 +636,40 @@ with tab_game:
 
         st.divider()
 
-        # --- 🎃 2. DENNÍ ROTACE POSTAV ---
+        # --- 🎃 2. DENNÍ ROTACE POSTAV (NEMĚNÍ SE PO NÁKUPU) ---
         if datetime.now() <= event_end_date:
             st.subheader("🎃 Dnešní exkluzivní nabídka (24h)")
-            st.caption("Postavy se mění každý den o půlnoci. Zakoupené postavy se z nabídky vyřadí!")
+            st.caption("Postavy se mění každý den o půlnoci. Zakoupené postavy získáš natrvalo!")
 
-            available_chars = [c for c in HALLOWEEN_CHARACTERS if c["id"] not in st.session_state.owned_characters]
+            all_chars = HALLOWEEN_CHARACTERS.copy()
 
-            if not available_chars:
-                st.balloons()
-                st.success("🏆 Úžasné! Vlastníš už všechny Halloweenské postavy!")
-            else:
-                random.seed(today_str)
-                daily_count = min(2, len(available_chars))
-                daily_offers = random.sample(available_chars, daily_count)
-                random.seed()
+            # Zafixování dnešní nabídky na 24h
+            seed_value = int(hashlib.md5(today_str.encode()).hexdigest(), 16) % (10**8)
+            random.seed(seed_value)
+            daily_offers = random.sample(all_chars, 2)
+            random.seed()
 
-                col1, col2 = st.columns(2)
-                cols = [col1, col2]
+            col1, col2 = st.columns(2)
+            cols = [col1, col2]
 
-                for i, char in enumerate(daily_offers):
-                    with cols[i]:
-                        st.markdown(f"### {char['name']}")
-                        st.caption(f"Vzácnost: **{char['rarity']}**")
-                        st.write(f"*{char['desc']}*")
-                        
-                        yield_str = f"🪙 **+{char['cph']}** / hod"
-                        if char['gph'] > 0:
-                            yield_str += f" | 💎 **+{char['gph']}** / hod"
-                        st.markdown(f"📈 **Příjem:** {yield_str}")
-                        
-                        price_icon = "🪙" if char["type"] == "coins" else "💎"
-                        price_text = f"{char['price']} {price_icon}"
+            for i, char in enumerate(daily_offers):
+                with cols[i]:
+                    st.markdown(f"### {char['name']}")
+                    st.caption(f"Vzácnost: **{char['rarity']}**")
+                    st.write(f"*{char['desc']}*")
+                    
+                    yield_str = f"🪙 **+{char['cph']}** / hod"
+                    if char['gph'] > 0:
+                        yield_str += f" | 💎 **+{char['gph']}** / hod"
+                    st.markdown(f"📈 **Příjem:** {yield_str}")
+                    
+                    price_icon = "🪙" if char["type"] == "coins" else "💎"
+                    price_text = f"{char['price']} {price_icon}"
 
+                    # Pokud už hráč postavu vlastní
+                    if char["id"] in st.session_state.owned_characters:
+                        st.button("✅ Vlastněno", key=f"owned_{char['id']}", disabled=True, use_container_width=True)
+                    else:
                         if st.button(f"Koupit za {price_text}", key=f"buy_{char['id']}", use_container_width=True):
                             has_currency = (st.session_state.coins >= char['price']) if char['type'] == "coins" else (st.session_state.gems >= char['price'])
                             
@@ -1109,4 +1110,4 @@ with st.sidebar:
             st.rerun()
 
 save_game()
-            
+    
