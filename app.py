@@ -498,6 +498,18 @@ with st.sidebar:
                 ).translate(text)
 
                 st.success(vysledek)
+                
+    with st.expander("⚖️ Podmínky & Ochrana soukromí"):
+        st.markdown("""
+        **Zásady ochrany soukromí a pravidla hry**
+        
+        * **Osobní údaje:** Hra ukládá pouze zvolenou přezdívku a herní postup. Nepožadujeme e-mail ani reálné jméno.
+        * **Bez mikrotransakcí:** Všechny měny (mince, gemy) jsou pouze virtuální a nelze je nakupovat ani směňovat za reálné peníze.
+        * **Pravidla obchodování (Trading):** Výměna herních předmětů nebo postav za reálné peníze mimo hru je přísně zakázána.
+        * **Ukládání dat:** Data jsou bezpečně uložena v databázi pro zachování tvého herního postupu.
+        * **Férová hra:** Používáním aplikace souhlasíš s dodržováním pravidel a férovým hraním bez zneužívání chyb.
+        """)
+        
 
     st.divider()
 
