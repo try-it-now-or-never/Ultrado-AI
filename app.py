@@ -332,7 +332,7 @@ def get_income():
 
 def open_box(box_type):
 
-    if box_type == "Brawl Box":
+    if box_type == "Malý box":
         chances = {
             "Common": 80,
             "Rare": 18,
@@ -341,7 +341,7 @@ def open_box(box_type):
             "Legendary": 0,
         }
 
-    elif box_type == "Big Box":
+    elif box_type == "Velký box":
         chances = {
             "Common": 45,
             "Rare": 35,
@@ -350,7 +350,7 @@ def open_box(box_type):
             "Legendary": 1,
         }
 
-    else:
+    else:  # Ultrado box
         chances = {
             "Common": 15,
             "Rare": 25,
@@ -359,6 +359,8 @@ def open_box(box_type):
             "Legendary": 8,
             "Zakladatel": 2,
         }
+            
+
 
     rarity = random.choices(
         list(chances.keys()),
@@ -705,37 +707,41 @@ with tab_game:
     st.divider()
 
     # ---------------- SHOP ----------------
+    # ---------------- SHOP ----------------
 
-    st.subheader("🛒 Shop")
+    st.subheader("🛒 Obchod s boxy")
 
     b1, b2, b3 = st.columns(3)
 
     with b1:
-        if st.button("📦 Brawl Box\n100 🪙", use_container_width=True):
+        if st.button("📦 Malý box\n100 🪙", use_container_width=True):
             if st.session_state.coins >= 100:
                 st.session_state.coins -= 100
-                open_box("Brawl Box")
+                open_box("Malý box")
                 st.rerun()
             else:
                 st.error("Nemáš dost mincí.")
 
     with b2:
-        if st.button("📦 Big Box\n500 🪙", use_container_width=True):
+        if st.button("📦 Velký box\n500 🪙", use_container_width=True):
             if st.session_state.coins >= 500:
                 st.session_state.coins -= 500
-                open_box("Big Box")
+                open_box("Velký box")
                 st.rerun()
             else:
                 st.error("Nemáš dost mincí.")
 
     with b3:
-        if st.button("📦 Mega Box\n50 💎", use_container_width=True):
+        if st.button("🎁 Ultrado box\n50 💎", use_container_width=True):
             if st.session_state.gems >= 50:
                 st.session_state.gems -= 50
-                open_box("Mega Box")
+                open_box("Ultrado box")
                 st.rerun()
             else:
                 st.error("Nemáš dost gemů.")
+                
+    
+
 
     st.divider()
 
