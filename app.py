@@ -540,7 +540,7 @@ if now <= event_end_date:
     text-align:center;
     margin-bottom:10px;
     border-top:4px solid #ff8c00;
-}
+ }
 
 .wiki-box {
     max-height: 250px;
