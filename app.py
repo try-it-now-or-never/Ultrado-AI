@@ -162,9 +162,9 @@ def save_game():
 
     # 2. Záložní uložení přímo do prohlížeče (localStorage)
     json_str = json.dumps(data)
-    js_code = f"""
+    js_code = """
     <script>
-        localStorage.setItem('ultrado_user_save', '{json_str}');
+        localStorage.setItem('ultrado_user_save', '""" + json_str + """');
     </script>
     """
     components.html(js_code, height=0, width=0)
@@ -399,32 +399,27 @@ def open_box(box_type):
 
 st.markdown("""
 <style>
-
-.main{
-    background:#0e1117;
+.main {
+    background: #0e1117;
 }
-
-h1,h2,h3{
-    color:#ff8c00;
+h1, h2, h3 {
+    color: #ff8c00;
 }
-
-.stButton>button{
-    background:#ff8c00;
-    color:black;
-    border-radius:12px;
-    border:none;
-    font-weight:bold;
+.stButton>button {
+    background: #ff8c00;
+    color: black;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
 }
-
-.brawler-card{
-    background:#1c1f26;
-    padding:15px;
-    border-radius:12px;
-    text-align:center;
-    margin-bottom:10px;
-    border-top:4px solid #ff8c00;
+.brawler-card {
+    background: #1c1f26;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 10px;
+    border-top: 4px solid #ff8c00;
 }
-
 .wiki-box {
     max-height: 250px;
     overflow-y: auto;
@@ -436,124 +431,6 @@ h1,h2,h3{
     margin-bottom: 10px;
     color: #e0e0e0;
 }
-
-</style>
-""", unsafe_allow_html=True)
-
-
-# ---------------- SIDEBAR ----------------
-
-with st.sidebar:
-
-    st.title("⚡ ULTRADO 3.0")
-    st.write(f"👤 Přihlášen: **{st.session_state.username}**")
-    
-    if st.button("🚪 Odhlásit se"):
-        st.session_state.logged_in = False
-        st.session_state.username = ""
-        st.rerun()
-
-    st.divider()
-
-    st.subheader("📊 Cesta ke slávě")
-
-    st.session_state.subs = st.number_input(
-        "Odběratelů",
-        value=st.session_state.subs,
-        step=1
-    )
-
-    cil = st.number_input(
-        "Cíl",
-        value=100,
-        step=1
-    )
-
-    if cil > 0:
-        progress = min(
-            st.session_state.subs / cil,
-            1.0
-        )
-
-        st.progress(progress)
-
-        if progress >= 1:
-            st.success("Cíl splněn! 🏆")
-
-    st.divider()
-
-    with st.expander("✅ Úkoly"):
-
-        st.checkbox("Vymyslet téma")
-        st.checkbox("Natočit video")
-        st.checkbox("Sestříhat video")
-        st.checkbox("Vydat video")
-
-    with st.expander("🌍 Překladač"):
-
-        text = st.text_area("Česky")
-
-        if st.button("Přeložit"):
-
-            if IMPORT_ERR:
-                st.error("Chybí knihovna deep-translator.")
-            else:
-                vysledek = GoogleTranslator(
-                    source="cs",
-                    target="en"
-                ).translate(text)
-
-                st.success(vysledek)
-
-    st.divider()
-
-    if st.button("🔄 Reset hry"):
-        st.session_state.clear()
-        js_reset = """
-        <script>
-            localStorage.removeItem('ultrado_user_save');
-            window.location.href = window.location.pathname;
-        </script>
-        """
-        components.html(js_reset, height=0, width=0)
-        st.rerun()
-
-
-# ==============================================================================
-# HALLOWEENSKÝ BANNER S ODPOČTEM (NAHORU NAD ZÁLOŽKY)
-# ==============================================================================
-event_end_date = datetime(2026, 11, 8, 23, 59, 59)
-now = datetime.now()
-
-if now <= event_end_date:
-    time_left = event_end_date - now
-    days = time_left.days
-    hours = time_left.seconds // 3600
-    minutes = (time_left.seconds % 3600) // 60
-    
-    st.markdown(
-        f"""
-        <div style="
-            background: linear-gradient(90deg, #ff6600, #9900cc);
-            padding: 10px 15px;
-            border-radius:12px;
-    text-align:center;
-    margin-bottom:10px;
-    border-top:4px solid #ff8c00;
- }
-
-.wiki-box {
-    max-height: 250px;
-    overflow-y: auto;
-    background: #1c1f26;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ff8c00;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    color: #e0e0e0;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -945,11 +822,8 @@ with tab_game:
 
                 st.markdown(
                     f"""
-                    <div class="brawler-card"
-                    style="border-top-color:{colors.get(rarity, '#ffffff')}">
-                        <b style="color:{colors.get(rarity, '#ffffff')}">
-                        {name}
-                        </b><br>
+                    <div class="brawler-card" style="border-top-color:{colors.get(rarity, '#ffffff')}">
+                        <b style="color:{colors.get(rarity, '#ffffff')}">{name}</b><br>
                         <small>{rarity}</small><br>
                         <span style="color:#ff8c00; font-weight:bold;">Lv. {lvl}</span><br>
                         <small>Karty: {dups}/{needed}</small>
@@ -1235,4 +1109,4 @@ with st.sidebar:
             st.rerun()
 
 save_game()
-                                    
+            
