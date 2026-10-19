@@ -696,10 +696,10 @@ with st.sidebar:
         components.html(js_reset, height=0, width=0)
         st.rerun()
     if now <= event_end_date:
-    time_left = event_end_date - now
-    days = time_left.days
-    hours = time_left.seconds // 3600
-    minutes = (time_left.seconds % 3600) // 60
+       time_left = event_end_date - now
+       days = time_left.days
+       hours = time_left.seconds // 3600
+       minutes = (time_left.seconds % 3600) // 60
     
     st.markdown(
         f"""
