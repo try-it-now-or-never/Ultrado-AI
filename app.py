@@ -49,6 +49,10 @@ st.set_page_config(
     layout="wide"
 )
 
+# ---------------- GLOBÁLNÍ ČASOVÉ PROMĚNNÉ ----------------
+event_end_date = datetime(2026, 11, 8, 23, 59, 59)
+now = datetime.now()
+
 # ---------------- DATABÁZE 25 HALLOWEENSKÝCH POSTAV (VYVÁŽENÉ) ----------------
 
 HALLOWEEN_CHARACTERS = [
@@ -462,6 +466,7 @@ def open_box(box_type):
         
         current_lvl = st.session_state.inventory[reward]["level"]
         needed_cards = current_lvl * 2
+        
         if st.session_state.inventory[reward]["duplicates"] >= needed_cards:
             st.session_state.inventory[reward]["duplicates"] -= needed_cards
             st.session_state.inventory[reward]["level"] += 1
@@ -599,9 +604,7 @@ if is_xmas_event_active:
         """,
         unsafe_allow_html=True
     )
-
-
-# ---------------- SIDEBAR ----------------
+    # ---------------- SIDEBAR ----------------
 
 with st.sidebar:
 
@@ -692,10 +695,7 @@ with st.sidebar:
         """
         components.html(js_reset, height=0, width=0)
         st.rerun()
-        event_end_date = datetime(2026, 11, 8, 23, 59, 59)
-now = datetime.now()
-
-if now <= event_end_date:
+    if now <= event_end_date:
     time_left = event_end_date - now
     days = time_left.days
     hours = time_left.seconds // 3600
@@ -1084,7 +1084,7 @@ with tab_game:
         st.rerun()
 
     st.divider()
-    # ---------------- INVENTÁŘ ----------------
+        # ---------------- INVENTÁŘ ----------------
 
     st.subheader("🎒 Tvůj tým")
 
@@ -1482,5 +1482,5 @@ with st.sidebar:
             st.rerun()
 
 save_game()
+
     
-     
