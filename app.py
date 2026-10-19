@@ -1456,7 +1456,7 @@ with st.sidebar:
             save_game()
             st.success("Všechny Vánoční postavy odemčeny.")
 
-        st.divider()
+            st.divider()
         st.write("### 🎄 Testování Vánočního Eventu")
         st.session_state.christmas_admin_debug = st.checkbox("Aktivovat Debug Mode pro Vánoce", value=st.session_state.christmas_admin_debug)
         
@@ -1466,7 +1466,8 @@ with st.sidebar:
                 ["Real time", "Pre-Event (14. - 17. 12.)", "Full Event & Pass (18. 12. - 3. 1.)", "Po Eventu (Po 3. 1.)"]
             )
             st.info(f"Aktuálně simulovaný čas: {now_time.strftime('%d. %m. %Y %H:%M')}")
-            st.rerun()
+            # TADY BYL ST.RERUN() - KDYŽ HO SMAŽEŠ, Bude to fungovat normálně!
+        
 
         if st.button("♻️ Vymazat uloženou hru"):
 
