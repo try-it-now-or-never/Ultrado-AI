@@ -462,7 +462,7 @@ def open_box(box_type):
         
         current_lvl = st.session_state.inventory[reward]["level"]
         needed_cards = current_lvl * 2
-         if st.session_state.inventory[reward]["duplicates"] >= needed_cards:
+        if st.session_state.inventory[reward]["duplicates"] >= needed_cards:
             st.session_state.inventory[reward]["duplicates"] -= needed_cards
             st.session_state.inventory[reward]["level"] += 1
 
