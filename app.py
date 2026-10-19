@@ -696,7 +696,7 @@ with tab_game:
             else:
                 st.error("Nemáš dost gemů.")
     st.divider()
-    st.subheader("⛏️ Sklad")
+ st.subheader("⛏️ Sklad")
     seconds = min(time.time() - st.session_state.last_claim, 43200)
     mined_coins = (coins_h / 3600) * seconds
     mined_gems = (gems_h / 3600) * seconds
