@@ -722,7 +722,7 @@ with st.sidebar:
 
 # ---------------- TABS ----------------
 
-tab_game, tab_studio, tab_ai = st.tabs([
+tab_game, tab_studio, tab_ai, tab_trziste = st.tabs([
     "🎮 TYCOON",
     "🎬 PRODUKČNÍ PANEL",
     "💬 AI CHAT",
