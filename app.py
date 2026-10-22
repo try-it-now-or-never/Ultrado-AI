@@ -722,7 +722,7 @@ with st.sidebar:
 
 # ---------------- TABS ----------------
 
-tab_game, tab_studio, tab_ai, tab_trziste = st.tabs([
+tab_game, tab_studio, tab_ai, tab_tržiště = st.tabs([
     "🎮 TYCOON",
     "🎬 PRODUKČNÍ PANEL",
     "💬 AI CHAT",
@@ -935,7 +935,7 @@ with tab_game:
         st.divider()
 
     # =====# --- ZÁLOŽKA 2: TRŽIŠTĚ (NOVÁ MULTIPLAYER LOGIKA) ---
-with tab_market:
+with tab_tržiště:
     st.title("🤝 Hráčské Tržiště")
     st.write("Nakupuj postavy od ostatních hráčů nebo vystav vlastní přebytky!")
 
