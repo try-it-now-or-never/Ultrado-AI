@@ -936,8 +936,8 @@ with tab_game:
 
     # =====# --- ZÁLOŽKA 2: TRŽIŠTĚ (NOVÁ MULTIPLAYER LOGIKA) --
  with tab_market:
-    st.title("🤝 Hráčské Tržiště")
-    st.write("Nakupuj postavy a elixíry od ostatních hráčů nebo vystav vlastní přebytky!")
+     st.title("🤝 Hráčské Tržiště")
+     st.write("Nakupuj postavy a elixíry od ostatních hráčů nebo vystav vlastní přebytky!")
 
     # --- A. AUTOMATICKÁ VÝPLATA TRŽEB PRODEJCI ---
     if supabase and st.session_state.get("username"):
