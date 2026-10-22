@@ -722,7 +722,7 @@ with st.sidebar:
 
 # ---------------- TABS ----------------
 
-tab_game, tab_studio, tab_ai, tab_tržiště = st.tabs([
+tab_game, tab_studio, tab_ai, tab_market = st.tabs([
     "🎮 TYCOON",
     "🎬 PRODUKČNÍ PANEL",
     "💬 AI CHAT",
@@ -934,92 +934,193 @@ with tab_game:
 
         st.divider()
 
-    # =====# --- ZÁLOŽKA 2: TRŽIŠTĚ (NOVÁ MULTIPLAYER LOGIKA) ---
-with tab_tržiště:
+    # =====# --- ZÁLOŽKA 2: TRŽIŠTĚ (NOVÁ MULTIPLAYER LOGIKA) --
+ with tab_market:
     st.title("🤝 Hráčské Tržiště")
-    st.write("Nakupuj postavy od ostatních hráčů nebo vystav vlastní přebytky!")
+    st.write("Nakupuj postavy a elixíry od ostatních hráčů nebo vystav vlastní přebytky!")
+
+    # --- A. AUTOMATICKÁ VÝPLATA TRŽEB PRODEJCI ---
+    if supabase and st.session_state.get("username"):
+        try:
+            sold_res = supabase.table("marketplace").select("*").eq("seller", st.session_state.username).eq("status", "sold").execute()
+            sold_items = sold_res.data if sold_res.data else []
+
+            if sold_items:
+                total_coins_earned = 0
+                total_gems_earned = 0
+
+                for sold in sold_items:
+                    if sold["currency"] == "coins":
+                        total_coins_earned += sold["price"]
+                    else:
+                        total_gems_earned += sold["price"]
+
+                    supabase.table("marketplace").update({"status": "claimed"}).eq("id", sold["id"]).execute()
+
+                st.session_state.coins += total_coins_earned
+                st.session_state.gems += total_gems_earned
+                save_game()
+
+                earned_msg = []
+                if total_coins_earned > 0:
+                    earned_msg.append(f"{total_coins_earned} 🪙")
+                if total_gems_earned > 0:
+                    earned_msg.append(f"{total_gems_earned} 💎")
+
+                st.toast(f"🎉 Tvoje zboží bylo prodáno! Získal jsi: {', '.join(earned_msg)}", icon="💰")
+        except Exception:
+            pass
 
     if "hidden_trades" not in st.session_state:
         st.session_state.hidden_trades = []
 
     market_view_tab, market_create_tab = st.tabs(["🌐 Veřejný trh", "📦 Vystavit předmět"])
 
-    # 1. Veřejný trh (Čtení nabídek ze Supabase)
+    # --- B. PROHLÍŽENÍ A NÁKUP (VEŘEJNÝ TRH) ---
     with market_view_tab:
         if supabase:
             try:
                 res = supabase.table("marketplace").select("*").eq("status", "active").execute()
                 offers = res.data if res.data else []
-                
+
                 active_offers = [
                     o for o in offers 
                     if o["seller"] != st.session_state.username and o["id"] not in st.session_state.hidden_trades
                 ]
-                
+
                 if not active_offers:
                     st.info("Na trhu nejsou žádné aktivní nabídky od ostatních hráčů.")
                 else:
                     for offer in active_offers:
                         col_info, col_btn1, col_btn2 = st.columns([3, 1, 1])
                         currency_icon = "🪙" if offer["currency"] == "coins" else "💎"
-                        
+
                         with col_info:
                             st.write(f"**Prodejce:** {offer['seller']} | **Předmět:** `{offer['item_name']}` | **Cena:** {offer['price']} {currency_icon}")
-                        
-                        # 🟢 Zelená fajfka (Koupit)
+
+                        # 🟢 ZELENÁ FAJFKA (KOUPIT)
                         with col_btn1:
                             if st.button("✅ Koupit", key=f"buy_trade_{offer['id']}", use_container_width=True):
                                 has_funds = (st.session_state.coins >= offer['price']) if offer['currency'] == "coins" else (st.session_state.gems >= offer['price'])
-                                
+
                                 if not has_funds:
                                     st.error("Nemáš dostatek financí!")
                                 else:
+                                    # 1. Stržení financí kupujícímu
                                     if offer['currency'] == "coins":
                                         st.session_state.coins -= offer['price']
                                     else:
                                         st.session_state.gems -= offer['price']
-                                    
-                                    # Přidání předmětu
-                                    item_name = offer['item_name']
-                                    if item_name not in st.session_state.inventory:
-                                        st.session_state.inventory[item_name] = {"level": 1, "duplicates": 0}
-                                    else:
-                                        if isinstance(st.session_state.inventory[item_name], int):
-                                            st.session_state.inventory[item_name] = {"level": st.session_state.inventory[item_name], "duplicates": 0}
-                                        st.session_state.inventory[item_name]["duplicates"] += 1
 
-                                    # Změna stavu v Supabase na sold
+                                    raw_name = offer['item_name']
+
+                                    # 2. Připsání předmětu kupujícímu
+                                    if raw_name.startswith("Standard: "):
+                                        clean_name = raw_name.replace("Standard: ", "")
+                                        if clean_name not in st.session_state.inventory:
+                                            st.session_state.inventory[clean_name] = {"level": 1, "duplicates": 0}
+                                        else:
+                                            if isinstance(st.session_state.inventory[clean_name], int):
+                                                st.session_state.inventory[clean_name] = {"level": st.session_state.inventory[clean_name], "duplicates": 0}
+                                            st.session_state.inventory[clean_name]["duplicates"] += 1
+
+                                    elif raw_name.startswith("Halloween: "):
+                                        clean_name = raw_name.replace("Halloween: ", "")
+                                        for h_id, h_data in HW_CHAR_MAP.items():
+                                            if h_data["name"] == clean_name:
+                                                if h_id not in st.session_state.owned_characters:
+                                                    st.session_state.owned_characters.append(h_id)
+                                                break
+
+                                    elif raw_name.startswith("Vánoce: "):
+                                        clean_name = raw_name.replace("Vánoce: ", "")
+                                        for x_id, x_data in XMAS_CHAR_MAP.items():
+                                            if x_data["name"] == clean_name:
+                                                if x_id not in st.session_state.owned_xmas_characters:
+                                                    st.session_state.owned_xmas_characters.append(x_id)
+                                                break
+
+                                    elif raw_name.startswith("Elixír: "):
+                                        clean_name = raw_name.replace("Elixír: ", "")
+                                        if "potions" not in st.session_state:
+                                            st.session_state.potions = {}
+                                        st.session_state.potions[clean_name] = st.session_state.potions.get(clean_name, 0) + 1
+
+                                    # 3. Označení v Supabase jako prodané
                                     supabase.table("marketplace").update({"status": "sold"}).eq("id", offer["id"]).execute()
-                                    
+
                                     save_game()
-                                    st.success(f"Úspěšně jsi zakoupil {item_name}!")
+                                    st.success(f"Úspěšně jsi zakoupil {raw_name}!")
                                     st.rerun()
 
-                        # 🔴 Červený křížek (Skrýt nabídku)
+                        # 🔴 ČERVENÝ KŘÍŽEK (SKRÝT NABÍDKU)
                         with col_btn2:
                             if st.button("❌ Skrýt", key=f"hide_trade_{offer['id']}", use_container_width=True):
                                 st.session_state.hidden_trades.append(offer['id'])
                                 st.rerun()
-                                
+
             except Exception as e:
                 st.error(f"Nepodařilo se načíst tržiště: {e}")
         else:
             st.warning("Tržiště vyžaduje aktivní připojení k Supabase databázi.")
 
-    # 2. Vystavení předmětu na trh
+    # --- C. VYSTAVENÍ PŘEDMĚTU NA TRH ---
     with market_create_tab:
-        owned_items = list(st.session_state.inventory.keys())
-        
-        if not owned_items:
-            st.info("Nemáš v inventáři žádné postavy k prodeji.")
+        sellable_items = []
+
+        # Standardní
+        for name in st.session_state.inventory.keys():
+            sellable_items.append(f"Standard: {name}")
+
+        # Halloween
+        for char_id in st.session_state.get("owned_characters", []):
+            if char_id in HW_CHAR_MAP:
+                sellable_items.append(f"Halloween: {HW_CHAR_MAP[char_id]['name']}")
+
+        # Vánoce
+        for char_id in st.session_state.get("owned_xmas_characters", []):
+            if char_id in XMAS_CHAR_MAP:
+                sellable_items.append(f"Vánoce: {XMAS_CHAR_MAP[char_id]['name']}")
+
+        # Elixíry
+        if "potions" in st.session_state:
+            for p_name, p_count in st.session_state.potions.items():
+                if p_count > 0:
+                    sellable_items.append(f"Elixír: {p_name}")
+
+        if not sellable_items:
+            st.info("Nemáš v inventáři žádné postavy ani elixíry k prodeji.")
         else:
-            selected_item = st.selectbox("Vyber postavu k prodeji", owned_items)
+            selected_item = st.selectbox("Vyber předmět/postavu k prodeji", sellable_items)
             price_currency = st.selectbox("Měna", ["Mince (🪙)", "Gemy (💎)"])
             item_price = st.number_input("Cena", min_value=1, value=100, step=10)
-            
+
             if st.button("🚀 Vystavit na trh", use_container_width=True):
                 curr_code = "coins" if "Mince" in price_currency else "gems"
-                
+
+                # Odebrání prodávaného předmětu prodejci z inventáře
+                if selected_item.startswith("Standard: "):
+                    clean_name = selected_item.replace("Standard: ", "")
+                    del st.session_state.inventory[clean_name]
+
+                elif selected_item.startswith("Halloween: "):
+                    clean_name = selected_item.replace("Halloween: ", "")
+                    for h_id, h_data in HW_CHAR_MAP.items():
+                        if h_data["name"] == clean_name:
+                            st.session_state.owned_characters.remove(h_id)
+                            break
+
+                elif selected_item.startswith("Vánoce: "):
+                    clean_name = selected_item.replace("Vánoce: ", "")
+                    for x_id, x_data in XMAS_CHAR_MAP.items():
+                        if x_data["name"] == clean_name:
+                            st.session_state.owned_xmas_characters.remove(x_id)
+                            break
+
+                elif selected_item.startswith("Elixír: "):
+                    clean_name = selected_item.replace("Elixír: ", "")
+                    st.session_state.potions[clean_name] -= 1
+
                 if supabase:
                     try:
                         supabase.table("marketplace").insert({
@@ -1029,97 +1130,20 @@ with tab_tržiště:
                             "currency": curr_code,
                             "status": "active"
                         }).execute()
-                        
-                        st.success("Nabídka byla úspěšně vystavena na trh!")
+
+                        save_game()
+                        st.success(f"Předmět '{selected_item}' byl nabídnut na trhu!")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Chyba při vystavování: {e}")
-    # 🛒 DENNÍ OBCHOD & HALLOWEENSKÁ NABÍDKA (OPRAVENÁ STABILNÍ ROTACE)
-    # ==========================================================================
-    today_str = datetime.now().strftime("%Y-%m-%d")
+            
 
-    with st.expander("🛒 **DENNÍ OBCHOD & HALLOWEENSKÁ NABÍDKA**", expanded=False):
+    
+                
+                        
+                        
+                        
         
-        # --- 🎁 1. DENNÍ DÁREK ZDARMA ---
-        st.subheader("🎁 Denní dárek zdarma")
-        last_claim = st.session_state.get("last_daily_claim", "")
-
-        if last_claim == today_str:
-            st.info("✅ Dnešní dárek zdarma už máš vyzvednutý! Přijď zase zítra.")
-        else:
-            if st.button("🎁 Vyzvednout dnešní odměnu zdarma", type="primary", use_container_width=True):
-                reward_type = random.choices(["coins", "gems"], weights=[80, 20])[0]
-                
-                if reward_type == "coins":
-                    amount = int(random.triangular(25, 200, 40))
-                    st.session_state.coins += amount
-                    st.success(f"🎉 Získal jsi zdarma **{amount} mincí** 🪙!")
-                else:
-                    amount = int(random.triangular(1, 30, 3))
-                    st.session_state.gems += amount
-                    st.success(f"💎 Vzácný drop! Získal jsi **{amount} gemů** 💎!")
-                
-                st.session_state.last_daily_claim = today_str
-                save_game()
-                st.rerun()
-
-        st.divider()
-
-        # --- 🎃 2. DENNÍ ROTACE POSTAV (NEMĚNÍ SE PO NÁKUPU) ---
-        if datetime.now() <= event_end_date:
-            st.subheader("🎃 Dnešní exkluzivní nabídka (24h)")
-            st.caption("Postavy se mění každý den o půlnoci. Zakoupené postavy získáš natrvalo!")
-
-            all_chars = HALLOWEEN_CHARACTERS.copy()
-
-            # Zafixování dnešní nabídky na 24h
-            seed_value = int(hashlib.md5(today_str.encode()).hexdigest(), 16) % (10**8)
-            random.seed(seed_value)
-            daily_offers = random.sample(all_chars, 2)
-            random.seed()
-
-            col1, col2 = st.columns(2)
-            cols = [col1, col2]
-
-            for i, char in enumerate(daily_offers):
-                with cols[i]:
-                    st.markdown(f"### {char['name']}")
-                    st.caption(f"Vzácnost: **{char['rarity']}**")
-                    st.write(f"*{char['desc']}*")
-                    
-                    yield_str = f"🪙 **+{char['cph']}** / hod"
-                    if char['gph'] > 0:
-                        yield_str += f" | 💎 **+{char['gph']}** / hod"
-                    st.markdown(f"📈 **Příjem:** {yield_str}")
-                    
-                    price_icon = "🪙" if char["type"] == "coins" else "💎"
-                    price_text = f"{char['price']} {price_icon}"
-
-                    # Pokud už hráč postavu vlastní
-                    if char["id"] in st.session_state.owned_characters:
-                        st.button("✅ Vlastněno", key=f"owned_{char['id']}", disabled=True, use_container_width=True)
-                    else:
-                        if st.button(f"Koupit za {price_text}", key=f"buy_{char['id']}", use_container_width=True):
-                            has_currency = (st.session_state.coins >= char['price']) if char['type'] == "coins" else (st.session_state.gems >= char['price'])
-                            
-                            if has_currency:
-                                if char['type'] == "coins":
-                                    st.session_state.coins -= char['price']
-                                else:
-                                    st.session_state.gems -= char['price']
-                                
-                                st.session_state.owned_characters.append(char['id'])
-                                st.session_state.gems_per_hour = float(st.session_state.gems_per_hour) + char['gph']
-                                save_game()
-
-                                st.success(f"🎉 Úspěšně jsi zakoupil {char['name']}!")
-                                st.rerun()
-                            else:
-                                st.error("Nemáš dostatek financí na tuto postavu!")
-        else:
-            st.warning("🎃 Halloweenský event již skončil. Těš se na další sezónní akci!")
-
-    st.divider()
 
     # ---------------- SHOP ----------------
 
@@ -1189,6 +1213,8 @@ with tab_tržiště:
     
          # ---------------- INVENTÁŘ (ROZDĚLENÝ NA ZÁLOŽKY) ----------------
 
+        # ---------------- INVENTÁŘ (ROZDĚLENÝ NA ZÁLOŽKY) ----------------
+
     st.subheader("🎒 Inventář & Tým")
 
     inv_tab_chars, inv_tab_potions = st.tabs(["🦸 Postavy a Tým", "🧪 Elixíry a Předměty"])
@@ -1221,7 +1247,7 @@ with tab_tržiště:
                 if char_id in XMAS_CHAR_MAP:
                     char = XMAS_CHAR_MAP[char_id]
                     rarity = char["rarity"]
-                    
+
                     with cols[col_idx % 5]:
                         st.markdown(
                             f"""
@@ -1241,7 +1267,7 @@ with tab_tržiště:
                 if char_id in HW_CHAR_MAP:
                     char = HW_CHAR_MAP[char_id]
                     rarity = char["rarity"]
-                    
+
                     with cols[col_idx % 5]:
                         st.markdown(
                             f"""
