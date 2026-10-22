@@ -725,7 +725,8 @@ with st.sidebar:
 tab_game, tab_studio, tab_ai = st.tabs([
     "🎮 TYCOON",
     "🎬 PRODUKČNÍ PANEL",
-    "💬 AI CHAT"
+    "💬 AI CHAT",
+    "🤝 TRŽIŠTĚ"
 ])
 with tab_game:
 
@@ -933,7 +934,106 @@ with tab_game:
 
         st.divider()
 
-    # ==========================================================================
+    # =====# --- ZÁLOŽKA 2: TRŽIŠTĚ (NOVÁ MULTIPLAYER LOGIKA) ---
+with tab_market:
+    st.title("🤝 Hráčské Tržiště")
+    st.write("Nakupuj postavy od ostatních hráčů nebo vystav vlastní přebytky!")
+
+    if "hidden_trades" not in st.session_state:
+        st.session_state.hidden_trades = []
+
+    market_view_tab, market_create_tab = st.tabs(["🌐 Veřejný trh", "📦 Vystavit předmět"])
+
+    # 1. Veřejný trh (Čtení nabídek ze Supabase)
+    with market_view_tab:
+        if supabase:
+            try:
+                res = supabase.table("marketplace").select("*").eq("status", "active").execute()
+                offers = res.data if res.data else []
+                
+                active_offers = [
+                    o for o in offers 
+                    if o["seller"] != st.session_state.username and o["id"] not in st.session_state.hidden_trades
+                ]
+                
+                if not active_offers:
+                    st.info("Na trhu nejsou žádné aktivní nabídky od ostatních hráčů.")
+                else:
+                    for offer in active_offers:
+                        col_info, col_btn1, col_btn2 = st.columns([3, 1, 1])
+                        currency_icon = "🪙" if offer["currency"] == "coins" else "💎"
+                        
+                        with col_info:
+                            st.write(f"**Prodejce:** {offer['seller']} | **Předmět:** `{offer['item_name']}` | **Cena:** {offer['price']} {currency_icon}")
+                        
+                        # 🟢 Zelená fajfka (Koupit)
+                        with col_btn1:
+                            if st.button("✅ Koupit", key=f"buy_trade_{offer['id']}", use_container_width=True):
+                                has_funds = (st.session_state.coins >= offer['price']) if offer['currency'] == "coins" else (st.session_state.gems >= offer['price'])
+                                
+                                if not has_funds:
+                                    st.error("Nemáš dostatek financí!")
+                                else:
+                                    if offer['currency'] == "coins":
+                                        st.session_state.coins -= offer['price']
+                                    else:
+                                        st.session_state.gems -= offer['price']
+                                    
+                                    # Přidání předmětu
+                                    item_name = offer['item_name']
+                                    if item_name not in st.session_state.inventory:
+                                        st.session_state.inventory[item_name] = {"level": 1, "duplicates": 0}
+                                    else:
+                                        if isinstance(st.session_state.inventory[item_name], int):
+                                            st.session_state.inventory[item_name] = {"level": st.session_state.inventory[item_name], "duplicates": 0}
+                                        st.session_state.inventory[item_name]["duplicates"] += 1
+
+                                    # Změna stavu v Supabase na sold
+                                    supabase.table("marketplace").update({"status": "sold"}).eq("id", offer["id"]).execute()
+                                    
+                                    save_game()
+                                    st.success(f"Úspěšně jsi zakoupil {item_name}!")
+                                    st.rerun()
+
+                        # 🔴 Červený křížek (Skrýt nabídku)
+                        with col_btn2:
+                            if st.button("❌ Skrýt", key=f"hide_trade_{offer['id']}", use_container_width=True):
+                                st.session_state.hidden_trades.append(offer['id'])
+                                st.rerun()
+                                
+            except Exception as e:
+                st.error(f"Nepodařilo se načíst tržiště: {e}")
+        else:
+            st.warning("Tržiště vyžaduje aktivní připojení k Supabase databázi.")
+
+    # 2. Vystavení předmětu na trh
+    with market_create_tab:
+        owned_items = list(st.session_state.inventory.keys())
+        
+        if not owned_items:
+            st.info("Nemáš v inventáři žádné postavy k prodeji.")
+        else:
+            selected_item = st.selectbox("Vyber postavu k prodeji", owned_items)
+            price_currency = st.selectbox("Měna", ["Mince (🪙)", "Gemy (💎)"])
+            item_price = st.number_input("Cena", min_value=1, value=100, step=10)
+            
+            if st.button("🚀 Vystavit na trh", use_container_width=True):
+                curr_code = "coins" if "Mince" in price_currency else "gems"
+                
+                if supabase:
+                    try:
+                        supabase.table("marketplace").insert({
+                            "seller": st.session_state.username,
+                            "item_name": selected_item,
+                            "price": int(item_price),
+                            "currency": curr_code,
+                            "status": "active"
+                        }).execute()
+                        
+                        st.success("Nabídka byla úspěšně vystavena na trh!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Chyba při vystavování: {e}")
     # 🛒 DENNÍ OBCHOD & HALLOWEENSKÁ NABÍDKA (OPRAVENÁ STABILNÍ ROTACE)
     # ==========================================================================
     today_str = datetime.now().strftime("%Y-%m-%d")
@@ -1086,108 +1186,128 @@ with tab_game:
     st.divider()
         # ---------------- INVENTÁŘ ----------------
 
-    st.subheader("🎒 Tvůj tým")
+    
+         # ---------------- INVENTÁŘ (ROZDĚLENÝ NA ZÁLOŽKY) ----------------
 
-    if st.session_state.inventory or st.session_state.owned_characters or st.session_state.owned_xmas_characters:
+    st.subheader("🎒 Inventář & Tým")
 
-        cols = st.columns(5)
-        col_idx = 0
+    inv_tab_chars, inv_tab_potions = st.tabs(["🦸 Postavy a Tým", "🧪 Elixíry a Předměty"])
 
-        colors = {
-            "Common": "#ffffff",
-            "Rare": "#00ff66",
-            "Epic": "#ff00ff",
-            "Mythic": "#ff0000",
-            "Legendary": "#ffff00",
-            "Zakladatel": "#ff5500",
-            "🟢 Common": "#4CAF50",
-            "🔵 Rare": "#2196F3",
-            "🟣 Epic": "#9C27B0",
-            "🟡 Legendary": "#FFEB3B",
-            "🔴 Mythic": "#F44336",
-            "🔮 Secret": "#E91E63",
-            "🎃 Event": "#ff6600"
-        }
+    # --- ZÁLOŽKA 1: POSTAVY ---
+    with inv_tab_chars:
+        if st.session_state.inventory or st.session_state.owned_characters or st.session_state.owned_xmas_characters:
 
-        # 1. Vánoční postavy (Zůstávají natrvalo)
-        for char_id in st.session_state.owned_xmas_characters:
-            if char_id in XMAS_CHAR_MAP:
-                char = XMAS_CHAR_MAP[char_id]
-                rarity = char["rarity"]
-                
-                with cols[col_idx % 5]:
-                    st.markdown(
-                        f"""
-                        <div class="brawler-card" style="border-top-color:{colors.get(rarity.split()[-1], '#ff8c00')}; border: 2px solid {colors.get(rarity.split()[-1], '#ff8c00')};">
-                            <b style="color:{colors.get(rarity.split()[-1], '#ff8c00')}">{char['name']}</b><br>
-                            <small>{rarity}</small><br>
-                            <span style="color:#ff8c00; font-weight:bold;">🎄 VÁNOCE</span><br>
-                            <small>🪙 +{char['cph']}/h | 💎 +{char['gph']}/h</small>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                col_idx += 1
+            cols = st.columns(5)
+            col_idx = 0
 
-        # 2. Halloweenské postavy
-        for char_id in st.session_state.owned_characters:
-            if char_id in HW_CHAR_MAP:
-                char = HW_CHAR_MAP[char_id]
-                rarity = char["rarity"]
-                
-                with cols[col_idx % 5]:
-                    st.markdown(
-                        f"""
-                        <div class="brawler-card" style="border-top-color:{colors.get(rarity, '#ff6600')}">
-                            <b style="color:{colors.get(rarity, '#ff6600')}">{char['name']}</b><br>
-                            <small>{rarity}</small><br>
-                            <span style="color:#ff8c00; font-weight:bold;">🎃 HALLOWEEN</span><br>
-                            <small>🪙 +{char['cph']}/h | 💎 +{char['gph']}/h</small>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                col_idx += 1
+            colors = {
+                "Common": "#ffffff",
+                "Rare": "#00ff66",
+                "Epic": "#ff00ff",
+                "Mythic": "#ff0000",
+                "Legendary": "#ffff00",
+                "Zakladatel": "#ff5500",
+                "🟢 Common": "#4CAF50",
+                "🔵 Rare": "#2196F3",
+                "🟣 Epic": "#9C27B0",
+                "🟡 Legendary": "#FFEB3B",
+                "🔴 Mythic": "#F44336",
+                "🔮 Secret": "#E91E63",
+                "🎃 Event": "#ff6600"
+            }
 
-        # 3. Standardní Brawleři
-        inventory = sorted(
-            st.session_state.inventory.items(),
-            key=lambda x: RARITY_ORDER.get(
-                BRAWLER_STATS[x[0]][0], 99
-            )
-        )
+            # 1. Vánoční postavy
+            for char_id in st.session_state.owned_xmas_characters:
+                if char_id in XMAS_CHAR_MAP:
+                    char = XMAS_CHAR_MAP[char_id]
+                    rarity = char["rarity"]
+                    
+                    with cols[col_idx % 5]:
+                        st.markdown(
+                            f"""
+                            <div class="brawler-card" style="border-top-color:{colors.get(rarity.split()[-1], '#ff8c00')}; border: 2px solid {colors.get(rarity.split()[-1], '#ff8c00')};">
+                                <b style="color:{colors.get(rarity.split()[-1], '#ff8c00')}">{char['name']}</b><br>
+                                <small>{rarity}</small><br>
+                                <span style="color:#ff8c00; font-weight:bold;">🎄 VÁNOCE</span><br>
+                                <small>🪙 +{char['cph']}/h | 💎 +{char['gph']}/h</small>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                    col_idx += 1
 
-        for name, item_data in inventory:
-            rarity = BRAWLER_STATS[name][0]
+            # 2. Halloweenské postavy
+            for char_id in st.session_state.owned_characters:
+                if char_id in HW_CHAR_MAP:
+                    char = HW_CHAR_MAP[char_id]
+                    rarity = char["rarity"]
+                    
+                    with cols[col_idx % 5]:
+                        st.markdown(
+                            f"""
+                            <div class="brawler-card" style="border-top-color:{colors.get(rarity, '#ff6600')}">
+                                <b style="color:{colors.get(rarity, '#ff6600')}">{char['name']}</b><br>
+                                <small>{rarity}</small><br>
+                                <span style="color:#ff8c00; font-weight:bold;">🎃 HALLOWEEN</span><br>
+                                <small>🪙 +{char['cph']}/h | 💎 +{char['gph']}/h</small>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                    col_idx += 1
 
-            if isinstance(item_data, dict):
-                lvl = item_data.get("level", 1)
-                dups = item_data.get("duplicates", 0)
-            else:
-                lvl = item_data
-                dups = 0
-
-            needed = lvl * 2
-
-            with cols[col_idx % 5]:
-
-                st.markdown(
-                    f"""
-                    <div class="brawler-card" style="border-top-color:{colors.get(rarity, '#ffffff')}">
-                        <b style="color:{colors.get(rarity, '#ffffff')}">{name}</b><br>
-                        <small>{rarity}</small><br>
-                        <span style="color:#ff8c00; font-weight:bold;">Lv. {lvl}</span><br>
-                        <small>Karty: {dups}/{needed}</small>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
+            # 3. Standardní Brawleři
+            inventory = sorted(
+                st.session_state.inventory.items(),
+                key=lambda x: RARITY_ORDER.get(
+                    BRAWLER_STATS[x[0]][0], 99
                 )
-            col_idx += 1
+            )
 
-    else:
+            for name, item_data in inventory:
+                rarity = BRAWLER_STATS[name][0]
 
-        st.info("Zatím nemáš žádné postavy.")
+                if isinstance(item_data, dict):
+                    lvl = item_data.get("level", 1)
+                    dups = item_data.get("duplicates", 0)
+                else:
+                    lvl = item_data
+                    dups = 0
 
+                needed = lvl * 2
+
+                with cols[col_idx % 5]:
+                    st.markdown(
+                        f"""
+                        <div class="brawler-card" style="border-top-color:{colors.get(rarity, '#ffffff')}">
+                            <b style="color:{colors.get(rarity, '#ffffff')}">{name}</b><br>
+                            <small>{rarity}</small><br>
+                            <span style="color:#ff8c00; font-weight:bold;">Lv. {lvl}</span><br>
+                            <small>Karty: {dups}/{needed}</small>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                col_idx += 1
+        else:
+            st.info("Zatím nemáš žádné postavy.")
+
+    # --- ZÁLOŽKA 2: ELIXÍRY A PŘEDMĚTY ---
+    with inv_tab_potions:
+        if "potions" not in st.session_state:
+            st.session_state.potions = {}
+
+        if not st.session_state.potions:
+            st.info("Zatím nemáš žádné elixíry ani speciální předměty.")
+        else:
+            for p_name, p_count in st.session_state.potions.items():
+                st.write(f"🧪 **{p_name}** — Počet: {p_count} ks")
+
+            
+                
+
+        
+    
 with tab_studio:
 
     st.title("🎬 HLAVNÍ PANEL ULTRADO")
